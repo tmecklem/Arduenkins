@@ -3,7 +3,7 @@
 
 ShiftBriteM::ShiftBriteM()
 {
-	ShiftBriteM(10,11,12,13);
+	ShiftBriteM(5,6,7,8);
 }
 
 ShiftBriteM::ShiftBriteM(int dataPin, int latchPin, int enablePin, int clockPin)

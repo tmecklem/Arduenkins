@@ -31,10 +31,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <ShiftBriteM.h>
 
 #define NUM_SHIFTBRITES 4
-#define SHIFTBRITE_CLOCK 8
-#define SHIFTBRITE_ENABLE 7
-#define SHIFTBRITE_LATCH 6
 #define SHIFTBRITE_DATA 5
+#define SHIFTBRITE_LATCH 6
+#define SHIFTBRITE_ENABLE 7
+#define SHIFTBRITE_CLOCK 8
 
 #define KNOWN_COLORS_SIZE 8
 #define MAX 768
@@ -48,13 +48,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define WHITE {511,511,511}
 
 #define MAC_ADDRESS {0x90, 0xA2, 0xDA, 0x00, 0xFD, 0x1D}
+#define STATIC_IP {192,168,33,2}
 #define JENKINS_SERVERNAME "tmecklem-mbp"
-#define JENKINS_IP {192,168,10,147}
+#define JENKINS_IP {192,168,33,1}
 
-#define PROJECT_0_NAME "TestProject-2011.3.1"
-#define PROJECT_1_NAME "TestProject-2011.3.2"
-#define PROJECT_2_NAME "TestProject-2012.1"
-#define PROJECT_3_NAME "TestProject-dev"
+#define PROJECT_0_NAME "Care360-dev"
+#define PROJECT_1_NAME "Care360-2012.1"
+#define PROJECT_2_NAME "Care360-2011.3.2"
+#define PROJECT_3_NAME "Care360-2011.3.1"
 
 char* knownColors[]={  "red", "green", "blue", "yellow", "cyan", "magenta", "off", "white" };
 int components[][3]={  RED,  GREEN, BLUE, YELLOW, CYAN, MAGENTA, OFF, WHITE };
@@ -71,11 +72,24 @@ char *jenkinsProjects[] = {PROJECT_0_NAME, PROJECT_1_NAME, PROJECT_2_NAME, PROJE
     
 void setup()
 {
+  Serial.begin(9600);
+  sb = ShiftBriteM(SHIFTBRITE_DATA, SHIFTBRITE_LATCH, SHIFTBRITE_ENABLE, SHIFTBRITE_CLOCK);
+  pinMode(4, OUTPUT); 
+  digitalWrite(4, LOW); //disable SD  
   pinMode(10, OUTPUT); 
   digitalWrite(10, HIGH); //enable ethernet
   
-  Serial.begin(9600);
+  for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
+    sb.sendColour(MAX,0,0);
+  }
+  sb.activate();
+  delay(2000);
+  
   byte mac[] = MAC_ADDRESS;
+  byte staticIP[] = STATIC_IP;
+  Ethernet.begin(mac, staticIP);
+  
+  /*Serial.println("Configuring Ethernet via DHCP");
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
     for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
@@ -85,9 +99,10 @@ void setup()
     // no point in carrying on, so do nothing forevermore:
     for(;;)
       ;
-  }
+  }*/
+  
+  delay(1000);
   Serial.println(Ethernet.localIP());
-  sb = ShiftBriteM(SHIFTBRITE_CLOCK, SHIFTBRITE_ENABLE, SHIFTBRITE_LATCH, SHIFTBRITE_DATA);
   for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
     sb.sendColour(0,0,0);
   }
