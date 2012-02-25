@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <Ethernet.h>
 #include <JenkinsClient.h>
 #include <ShiftBriteM.h>
+#include <MemoryFree.h>
 
 #define NUM_SHIFTBRITES 4
 #define SHIFTBRITE_DATA 5
@@ -52,9 +53,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 char* knownColors[]={  "red", "green", "blue", "yellow", "cyan", "magenta", "off", "white" };
 int components[][3]={  RED,  GREEN, BLUE, YELLOW, CYAN, MAGENTA, OFF, WHITE };
-
-//char testJSON[] = {"{\"assignedLabels\":[{}],\"mode\":\"EXCLUSIVE\",\"nodeDescription\":\"the master Jenkins node\",\"nodeName\":\"\",\"numExecutors\":1,\"description\":null,\"jobs\":[{\"name\":\"TestProject-2011.3.1\",\"url\":\"http://buildserver:4567/jenkins/job/TestProject-2011.3.1/\",\"color\":\"blue\"},{\"name\":\"TestProject-2011.3.2\",\"url\":\"http://buildserver:4567/jenkins/job/TestProject-2011.3.2/\",\"color\":\"blue\"},{\"name\":\"TestProject-2012.1\",\"url\":\"http://buildserver:4567/jenkins/job/TestProject-2012.1/\",\"color\":\"blue\"},{\"name\":\"TestProject-dev\",\"url\":\"http://buildserver:4567/jenkins/job/TestProject-dev/\",\"color\":\"blue\"},{\"name\":\"TestProject-dev-nightly\",\"url\":\"http://buildserver:4567/jenkins/job/TestProject-dev-nightly/\",\"color\":\"disabled\"},{\"name\":\"TestProject-NONTEST\",\"url\":\"http://buildserver:4567/jenkins/job/TestProject-TESTSET/\",\"color\":\"disabled\"},{\"name\":\"TestProject-Dev-Test\",\"url\":\"http://buildserver:4567/jenkins/job/TestProject-Dev-Test/\",\"color\":\"disabled\"},{\"name\":\"P6Spy-dev\",\"url\":\"http://buildserver:4567/jenkins/job/SOMETHINGELSE-DEV/\",\"color\":\"blue\"}],\"overallLoad\":{},\"primaryView\":{\"name\":\"All\",\"url\":\"http://buildserver:4567/jenkins/\"},\"quietingDown\":false,\"slaveAgentPort\":0,\"useCrumbs\":false,\"useSecurity\":false,\"views\":[{\"name\":\"All\",\"url\":\"http://buildserver:4567/jenkins/\"}]}"};
-//char testJSON[] = {"{\"jobs\":[{\"name\":\"TestProject-2011.3.1\",\"color\":\"blue\"},{\"name\":\"TestProject-2011.3.2\",\"color\":\"yellow\"},{\"name\":\"TestProject-2012.1\",\"color\":\"blue\"},{\"name\":\"TestProject-dev\",\"color\":\"red\"}]}"};
 
 // initialize the library instance:
 EthernetClient client;
@@ -106,6 +104,8 @@ void setup()
 
 void loop()
 {
+    Serial.print(F("freeMemory()="));
+    Serial.println(freeMemory());
     if(jenkinsClient.update()){
       for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
         Serial.print(F("Looking for project "));
