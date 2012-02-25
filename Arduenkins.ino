@@ -17,17 +17,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
+#include "aJSON.h"      //https://github.com/interactive-matter/aJson 
 #include <SPI.h>
-#include <Dhcp.h>
-#include <Dns.h>
+//#include <Dhcp.h>
 #include <Ethernet.h>
-#include <EthernetClient.h>
-#include <EthernetServer.h>
-#include <EthernetUdp.h>
-#include <util.h>
 #include <JenkinsClient.h>
-#include <HTTPClient.h>          //https://github.com/interactive-matter/HTTPClient 
-#include <aJSON.h>               //https://github.com/interactive-matter/aJson 
 #include <ShiftBriteM.h>
 
 #define NUM_SHIFTBRITES 4
@@ -49,7 +43,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #define MAC_ADDRESS {0x90, 0xA2, 0xDA, 0x00, 0xFD, 0x1D}
 #define STATIC_IP {192,168,33,2}
-#define JENKINS_SERVERNAME "tmecklem-mbp"
 #define JENKINS_IP {192,168,33,1}
 
 #define PROJECT_0_NAME "Care360-dev"
@@ -67,7 +60,7 @@ int components[][3]={  RED,  GREEN, BLUE, YELLOW, CYAN, MAGENTA, OFF, WHITE };
 EthernetClient client;
 ShiftBriteM sb;
 byte serverIP[] = JENKINS_IP;
-JenkinsClient jenkinsClient(JENKINS_SERVERNAME, serverIP);
+JenkinsClient jenkinsClient(serverIP, &client);
 char *jenkinsProjects[] = {PROJECT_0_NAME, PROJECT_1_NAME, PROJECT_2_NAME, PROJECT_3_NAME};
     
 void setup()
@@ -108,22 +101,22 @@ void setup()
   }
   sb.activate();
   delay(1000);
-  Serial.print("Started Up");
+  Serial.print(F("Started Up\n"));
 }
 
 void loop()
 {
     if(jenkinsClient.update()){
       for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
-        Serial.print("Looking for project ");
+        Serial.print(F("Looking for project "));
         Serial.println(jenkinsProjects[projectIndex]);
         char *color = jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex]);
-        Serial.print("Received color ");
+        Serial.print(F("Received color "));
         Serial.println(color);
         for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
             if(strncmp(knownColors[i],color,3) == 0){
                 sb.sendColour(components[i][0], components[i][1], components[i][2]);
-                Serial.print("Setting ShiftBrite to color ");
+                Serial.print(F("Setting ShiftBrite to color "));
                 Serial.println(knownColors[i]);
                 break;
             }
