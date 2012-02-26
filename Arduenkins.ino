@@ -62,7 +62,7 @@ ShiftBriteM sb;
 byte serverIP[] = JENKINS_IP;
 JenkinsClient jenkinsClient(serverIP, JENKINS_PORT, &client);
 char *jenkinsProjects[] = {PROJECT_0_NAME, PROJECT_1_NAME, PROJECT_2_NAME, PROJECT_3_NAME};
-    
+  
 void setup()
 {
   Serial.begin(9600);
@@ -101,14 +101,13 @@ void setup()
         sb.activate();
         delay(500);
       }
-      //try again in 15s
     }
   }
   
   //give the Ethernet module time to initialize... because I saw this in someone else's code.
   delay(1000);
   
-  Serial.print("Local IP is: ");
+  Serial.print(F("Local IP is: "));
   Serial.println(Ethernet.localIP());
   
   for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
@@ -120,31 +119,30 @@ void setup()
 
 void loop()
 {
-    //Serial.print(F("freeMemory()="));
-    //Serial.println(freeMemory());
-    for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
-      Serial.print(F("Looking for project "));
-      Serial.println(jenkinsProjects[projectIndex]);
-      char color[24] = {'\0'};
-      jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color);
-      if(!strlen(color)==0){
-        Serial.print(F("Received color "));
-        Serial.println(color);
-        for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
-            if(strncmp(knownColors[i],color,3) == 0){
-                sb.sendColour(components[i][0], components[i][1], components[i][2]);
-                Serial.print(F("Setting ShiftBrite to color "));
-                Serial.println(knownColors[i]);
-                break;
-            }
+  //Serial.print(F("freeMemory()="));
+  //Serial.println(freeMemory());
+  for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
+    Serial.print(F("Looking for project "));
+    Serial.println(jenkinsProjects[projectIndex]);
+    char color[24] = {'\0'};
+    jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color);
+    if(!strlen(color)==0){
+      Serial.print(F("Received color "));
+      Serial.println(color);
+      for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
+        if(strncmp(knownColors[i],color,3) == 0){
+          sb.sendColour(components[i][0], components[i][1], components[i][2]);
+          Serial.print(F("Setting ShiftBrite to color "));
+          Serial.println(knownColors[i]);
+          break;
         }
       }
-      else {
-        Serial.println(F("Failure, turning off light"));
-        sb.sendColour(0,0,0);
-      }
+    } else {
+      Serial.println(F("Failure, turning off light"));
+      sb.sendColour(0,0,0);
     }
-    sb.activate();
-    //check again in a minute
-    delay(60000);
+  }
+  sb.activate();
+  //check again in a minute
+  delay(60000);
 }
