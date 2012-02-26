@@ -1,2 +1,6 @@
-
+.cproject
+.metadata
+.project
+.settings
 .DS_Store
+Release
