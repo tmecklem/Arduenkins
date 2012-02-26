@@ -3,19 +3,17 @@
 
 #include "Arduino.h"
 #include "Ethernet.h"
-#include "aJSON.h"      //https://github.com/interactive-matter/aJson 
 
 class JenkinsClient
 {
 public:
 	JenkinsClient();
-	JenkinsClient(uint8_t ip[], EthernetClient *client);
-	int update();
-	char *getStatusForProject(char *projectName);
+	JenkinsClient(uint8_t ip[], int port, EthernetClient *client);
+	void getStatusForProject(char *projectName, char *statusBuffer);
 private:
 	EthernetClient *_client;
 	uint8_t _ip[4];
-	aJsonObject *_root;
+	int _port;
 };
 
 #endif

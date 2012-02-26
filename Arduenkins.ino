@@ -17,13 +17,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#include "aJSON.h"      //https://github.com/interactive-matter/aJson 
 #include <SPI.h>
-//#include <Dhcp.h>
+#include <Dhcp.h>
 #include <Ethernet.h>
 #include <JenkinsClient.h>
 #include <ShiftBriteM.h>
 #include <MemoryFree.h>
+#include <string.h>
 
 #define NUM_SHIFTBRITES 4
 #define SHIFTBRITE_DATA 5
@@ -45,6 +45,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define MAC_ADDRESS {0x90, 0xA2, 0xDA, 0x00, 0xFD, 0x1D}
 #define STATIC_IP {192,168,33,2}
 #define JENKINS_IP {192,168,33,1}
+#define JENKINS_PORT 80
 
 #define PROJECT_0_NAME "Care360-dev"
 #define PROJECT_1_NAME "Care360-2012.1"
@@ -58,7 +59,7 @@ int components[][3]={  RED,  GREEN, BLUE, YELLOW, CYAN, MAGENTA, OFF, WHITE };
 EthernetClient client;
 ShiftBriteM sb;
 byte serverIP[] = JENKINS_IP;
-JenkinsClient jenkinsClient(serverIP, &client);
+JenkinsClient jenkinsClient(serverIP, JENKINS_PORT, &client);
 char *jenkinsProjects[] = {PROJECT_0_NAME, PROJECT_1_NAME, PROJECT_2_NAME, PROJECT_3_NAME};
     
 void setup()
@@ -106,11 +107,12 @@ void loop()
 {
     Serial.print(F("freeMemory()="));
     Serial.println(freeMemory());
-    if(jenkinsClient.update()){
-      for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
-        Serial.print(F("Looking for project "));
-        Serial.println(jenkinsProjects[projectIndex]);
-        char *color = jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex]);
+    for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
+      Serial.print(F("Looking for project "));
+      Serial.println(jenkinsProjects[projectIndex]);
+      char color[24] = {'\0'};
+      jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color);
+      if(!strlen(color)==0){
         Serial.print(F("Received color "));
         Serial.println(color);
         for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
@@ -122,9 +124,11 @@ void loop()
             }
         }
       }
-      sb.activate();
-      delay(60000);
-    } else {
-      delay(5000); 
+      else {
+        Serial.println(F("Failure, turning off light"));
+        sb.sendColour(0,0,0);
+      }
     }
+    sb.activate();
+    delay(60000);
 }
