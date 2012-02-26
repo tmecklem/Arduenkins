@@ -1,0 +1,27 @@
+/* Network Setup */
+//Look under your ethernet shield, there's a sticker with the MAC address
+#define MAC_ADDRESS {0x90, 0xA2, 0xDA, 0x00, 0xFD, 0x1D}
+//If USE_DHCP is 1, will attempt to automatically acquire an IP address
+#define USE_DHCP 1
+//If USE_DHCP is 0, the ethernet shield will use this static IP
+#define STATIC_IP {192,168,33,2}
+//The IP address and port number for your Jenkins server
+#define JENKINS_IP {192,168,33,1}
+#define JENKINS_PORT 80
+
+
+/* Jenkins Job Configuration */
+//NUM_SHIFTBRITES should be the same as the number of projects you have listed below
+#define NUM_SHIFTBRITES 4
+//The Jenkins job names to poll (4 max for now)
+#define PROJECT_0_NAME "Care360-dev"
+#define PROJECT_1_NAME "Care360-2012.1"
+#define PROJECT_2_NAME "Care360-2011.3.2"
+#define PROJECT_3_NAME "Care360-2011.3.1"
+
+
+/* ShiftBrite Pin Configuration */
+#define SHIFTBRITE_DATA 5
+#define SHIFTBRITE_LATCH 6
+#define SHIFTBRITE_ENABLE 7
+#define SHIFTBRITE_CLOCK 8
