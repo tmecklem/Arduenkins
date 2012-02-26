@@ -20,11 +20,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <SPI.h>
 #include <Dhcp.h>
 #include <Ethernet.h>
+#include "ArduenkinsConfig.h"
 #include <JenkinsClient.h>
 #include <ShiftBriteM.h>
 #include <MemoryFree.h>
 #include <string.h>
-#include "ArduenkinsConfig.h"
 
 #define KNOWN_COLORS_SIZE 8
 #define MAX 768

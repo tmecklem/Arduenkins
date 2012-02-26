@@ -5,9 +5,14 @@
 #define USE_DHCP 1
 //If USE_DHCP is 0, the ethernet shield will use this static IP
 #define STATIC_IP {192,168,33,2}
+
+
+/* Jenkins Server Configuration */
 //The IP address and port number for your Jenkins server
 #define JENKINS_IP {192,168,33,1}
 #define JENKINS_PORT 80
+//The base URL on your server to get to each job
+#define JENKINS_JOB_BASE_URL "/~mecklem_t/job/"
 
 
 /* Jenkins Job Configuration */
