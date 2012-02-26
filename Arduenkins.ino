@@ -43,6 +43,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define WHITE {511,511,511}
 
 #define MAC_ADDRESS {0x90, 0xA2, 0xDA, 0x00, 0xFD, 0x1D}
+#define USE_DHCP 1
 #define STATIC_IP {192,168,33,2}
 #define JENKINS_IP {192,168,33,1}
 #define JENKINS_PORT 80
@@ -66,47 +67,61 @@ void setup()
 {
   Serial.begin(9600);
   sb = ShiftBriteM(SHIFTBRITE_DATA, SHIFTBRITE_LATCH, SHIFTBRITE_ENABLE, SHIFTBRITE_CLOCK);
+  
   pinMode(4, OUTPUT); 
-  digitalWrite(4, LOW); //disable SD  
+  digitalWrite(4, LOW); //disable SD
   pinMode(10, OUTPUT); 
   digitalWrite(10, HIGH); //enable ethernet
   
+  //init all purple (hopefully Jenkins doesn't have a purple status)
   for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
-    sb.sendColour(MAX,0,0);
+    sb.sendColour(MAX,0,MAX);
   }
   sb.activate();
-  delay(2000);
+  delay(20);
   
   byte mac[] = MAC_ADDRESS;
-  byte staticIP[] = STATIC_IP;
-  Ethernet.begin(mac, staticIP);
-  
-  /*Serial.println("Configuring Ethernet via DHCP");
-  if (Ethernet.begin(mac) == 0) {
-    Serial.println("Failed to configure Ethernet using DHCP");
-    for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
-      sb.sendColour(1023,0,0);
+  if(!USE_DHCP){
+    byte staticIP[] = STATIC_IP;
+    Ethernet.begin(mac, staticIP);
+  } else {
+    Serial.println(F("Configuring Ethernet via DHCP"));
+    while (Ethernet.begin(mac) == 0) {
+      Serial.println(F("Failed to configure Ethernet using DHCP"));
+      //blink like a moron so people know you're broken
+      for(int delaySecs = 0 ; delaySecs < 15 ; delaySecs++){
+        for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
+          sb.sendColour(1023,0,0);
+        }
+        sb.activate();
+        delay(500);
+        for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
+          sb.sendColour(0,0,0);
+        }
+        sb.activate();
+        delay(500);
+      }
+      //try again in 15s
     }
-    sb.activate();
-    // no point in carrying on, so do nothing forevermore:
-    for(;;)
-      ;
-  }*/
+  }
   
+  //give the Ethernet module time to initialize... because I saw this in someone else's code.
   delay(1000);
+  
+  Serial.print("Local IP is: ");
   Serial.println(Ethernet.localIP());
+  
   for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
     sb.sendColour(0,0,0);
   }
   sb.activate();
-  delay(1000);
   Serial.print(F("Started Up\n"));
 }
 
 void loop()
 {
-    Serial.print(F("freeMemory()="));
-    Serial.println(freeMemory());
+    //Serial.print(F("freeMemory()="));
+    //Serial.println(freeMemory());
     for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
       Serial.print(F("Looking for project "));
       Serial.println(jenkinsProjects[projectIndex]);
@@ -130,5 +145,6 @@ void loop()
       }
     }
     sb.activate();
+    //check again in a minute
     delay(60000);
 }
