@@ -3,4 +3,5 @@
 .project
 .settings
 .DS_Store
+ArduenkinsConfig.h
 Release
