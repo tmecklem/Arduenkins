@@ -127,6 +127,7 @@ void loop()
     char color[24] = {'\0'};
     jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color);
     if(!strlen(color)==0){
+      int found = 0;
       Serial.print(F("Received color "));
       Serial.println(color);
       for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
@@ -134,8 +135,12 @@ void loop()
           sb.sendColour(components[i][0], components[i][1], components[i][2]);
           Serial.print(F("Setting ShiftBrite to color "));
           Serial.println(knownColors[i]);
+          found = 1;
           break;
         }
+      }
+      if(!found){
+        sb.sendColour(0,0,0);
       }
     } else {
       Serial.println(F("Failure, turning off light"));
