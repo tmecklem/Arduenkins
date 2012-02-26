@@ -1,2 +1,2 @@
 BASICS:
-Assumes an Arduino with ATMega328, Ethernet shield, and a set of four Shiftbrites on pins: DI=5 LI=6 EI=7 CI=8. Using a 6V 1000mA power supply. Server with IP of 192.168.33.1, Arduino Ethernet Shield on 192.168.33.2. JSON test file at http://192.168.33.1/~mecklem_t/jenkins.json
+Assumes an Arduino with ATMega328, Ethernet shield, and a set of four Shiftbrites on pins: DI=5 LI=6 EI=7 CI=8. Using a 6V 1000mA power supply. Server with IP of 192.168.33.1, Arduino Ethernet Shield on 192.168.33.2. JSON test files at http://192.168.33.1/~mecklem_t/job/<project_name>/api/json?tree=color. Test files follow the format: {"color":"yellow"}
