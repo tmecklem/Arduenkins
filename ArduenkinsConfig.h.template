@@ -11,8 +11,9 @@
 //The IP address and port number for your Jenkins server
 #define JENKINS_IP {192,168,33,1}
 #define JENKINS_PORT 80
-//The base URL on your server to get to each job
-#define JENKINS_JOB_BASE_URL "/~mecklem_t/job/"
+//Used to build the URL on your server to get to each job
+#define JENKINS_PRE_JOB_URL "/~mecklem_t/job/"
+#define JENKINS_POST_JOB_URL "/api/json?tree=color"
 
 
 /* Jenkins Job Configuration */
