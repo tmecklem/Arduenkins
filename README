@@ -1,2 +1,15 @@
 BASICS:
 Assumes an Arduino with ATMega328, Ethernet shield, and a set of four Shiftbrites on pins: DI=5 LI=6 EI=7 CI=8. Using a 6V 1000mA power supply. Server with IP of 192.168.33.1, Arduino Ethernet Shield on 192.168.33.2. JSON test files at http://192.168.33.1/~mecklem_t/job/<project_name>/api/json?tree=color. Test files follow the format: {"color":"yellow"}
+
+JENKINS SECURITY:
+The Arduino just doesn't have the resources to handle SSL encryption.  However if you have a secured Jenkins server behind an Apache proxy, there is a way to make Arduenkins work with your setup.  There is an example "authentication proxy" in auth-proxy/arduenkins.php.  You can use it by following these steps:
+
+1.  Make sure you have PHP and cURL installed (sudo apt-get install php5-curl) and place arduenkins.php in your non-SSL document root.
+2.  Create a Jenkins user that has read-only rights to jobs.  In our example the user is called "arduenkins".  Login as this user, navigate to the profile (upper right) and click on the "Configure" menu on the left.  Click on "Show API Token" and copy that value.
+3.  Edit arduenkins.php and set $username to the user you created and $apiToken to the value you just copied.  You may also have to change the $urlStart variable.
+4.  You can test the script by navigating to http://yourserver/yourdocroot/arduenkins?job=yourjobname
+
+Now change the following values in ArduenkinsConfig.h:
+1.  #define JENKINS_PRE_JOB_URL "/arduenkins?job="
+2.  #define JENKINS_POST_JOB_URL ""
+
