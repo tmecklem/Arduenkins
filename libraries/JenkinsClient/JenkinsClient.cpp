@@ -26,7 +26,7 @@ JenkinsClient::JenkinsClient(uint8_t ip[], int port, EthernetClient *client) {
   _client = client;
 }
 
-void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer) {
+void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer, char *preJobUrl, char *postJobUrl) {
 
   Serial.print(F("Making request to  IP:"));;
   Serial.print(_ip[0]);
@@ -42,14 +42,14 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer) {
     Serial.print(F("connected\n"));;
     // Make a HTTP request:
     Serial.print(F("GET "));
-    Serial.print(F(JENKINS_PRE_JOB_URL));
+    Serial.print(preJobUrl);
     Serial.print(projectName);
-    Serial.println(F(JENKINS_POST_JOB_URL));
+    Serial.println(postJobUrl);
 
     _client->print("GET ");
-    _client->print(JENKINS_PRE_JOB_URL);
+    _client->print(preJobUrl);
     _client->print(projectName);
-    _client->println(JENKINS_POST_JOB_URL);
+    _client->println(postJobUrl);
     _client->println();
   } 
   else {
@@ -62,7 +62,7 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer) {
     //wait
   }
   
-  char status[25];
+  char status[30];
   int pos = 0;
   
   while(1) {
@@ -71,7 +71,7 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer) {
     if (_client->available()) {
       char c = _client->read();
       status[pos++] = c;
-      if(pos >= 24) break;
+      if(pos > 30) break;
       Serial.print(c);
     }
 

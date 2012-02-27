@@ -109,7 +109,7 @@ void loop()
     Serial.print(F("Looking for project "));
     Serial.println(jenkinsProjects[projectIndex]);
     char color[24] = {'\0'};
-    jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color);
+    jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color, JENKINS_PRE_JOB_URL, JENKINS_POST_JOB_URL);
     if(!strlen(color)==0){
       int found = 0;
       Serial.print(F("Received color "));
