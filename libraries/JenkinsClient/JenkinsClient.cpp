@@ -1,8 +1,11 @@
 #include "JenkinsClient.h"
 #include <string.h>
 
+#ifndef JENKINS_JOB_BASE_URL
+#define JENKINS_JOB_BASE_URL "/jenkins/job/"
+#endif
+
 JenkinsClient::JenkinsClient() {
-  char serverName[] = "jenkins";
   uint8_t server[] = {192,168,0,1};
   JenkinsClient(server, 80, NULL);
 }
@@ -42,7 +45,8 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer) {
   if (_client->connect(_ip, _port)) {
     Serial.print(F("connected\n"));;
     // Make a HTTP request:
-    _client->print("GET /~mecklem_t/job/");
+    _client->print("GET ");
+    _client->print(JENKINS_JOB_BASE_URL);
     _client->print(projectName);
     _client->println("/api/json?tree=color");
     _client->println();

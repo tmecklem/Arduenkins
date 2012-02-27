@@ -20,16 +20,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <SPI.h>
 #include <Dhcp.h>
 #include <Ethernet.h>
+#include "ArduenkinsConfig.h"
 #include <JenkinsClient.h>
 #include <ShiftBriteM.h>
 #include <MemoryFree.h>
 #include <string.h>
-
-#define NUM_SHIFTBRITES 4
-#define SHIFTBRITE_DATA 5
-#define SHIFTBRITE_LATCH 6
-#define SHIFTBRITE_ENABLE 7
-#define SHIFTBRITE_CLOCK 8
 
 #define KNOWN_COLORS_SIZE 8
 #define MAX 768
@@ -41,17 +36,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define MAGENTA {MAX,0,MAX}
 #define OFF {0,0,0}
 #define WHITE {511,511,511}
-
-#define MAC_ADDRESS {0x90, 0xA2, 0xDA, 0x00, 0xFD, 0x1D}
-#define USE_DHCP 1
-#define STATIC_IP {192,168,33,2}
-#define JENKINS_IP {192,168,33,1}
-#define JENKINS_PORT 80
-
-#define PROJECT_0_NAME "Care360-dev"
-#define PROJECT_1_NAME "Care360-2012.1"
-#define PROJECT_2_NAME "Care360-2011.3.2"
-#define PROJECT_3_NAME "Care360-2011.3.1"
 
 char* knownColors[]={  "red", "green", "blue", "yellow", "cyan", "magenta", "off", "white" };
 int components[][3]={  RED,  GREEN, BLUE, YELLOW, CYAN, MAGENTA, OFF, WHITE };
