@@ -115,6 +115,7 @@ void loop()
       Serial.print(F("Looking for project "));
       Serial.println(jenkinsProjects[projectIndex]);
       char color[24] = {'\0'};
+      //TODO: spread out these requests so that the animations don't stop for so long...
       jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color, JENKINS_PRE_JOB_URL, JENKINS_POST_JOB_URL);
       if(!strlen(color)==0){
         int found = 0;
