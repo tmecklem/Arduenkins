@@ -3,10 +3,10 @@
 
 ShiftBriteM::ShiftBriteM()
 {
-  ShiftBriteM(1,5,6,7,8);
+  ShiftBriteM(1,5,6,7,8, 1);
 }
 
-ShiftBriteM::ShiftBriteM(uint8_t numLights, uint8_t dataPin, uint8_t latchPin, uint8_t enablePin, uint8_t clockPin)
+ShiftBriteM::ShiftBriteM(uint8_t numLights, uint8_t dataPin, uint8_t latchPin, uint8_t enablePin, uint8_t clockPin, uint8_t lightUpdateFrequency)
 {
   _numLights = numLights > MAX_LIGHTS ? MAX_LIGHTS : numLights;
 
@@ -24,6 +24,7 @@ ShiftBriteM::ShiftBriteM(uint8_t numLights, uint8_t dataPin, uint8_t latchPin, u
   digitalWrite(_ePin, LOW);
   
   _commandNeeded = 1;
+  _lightUpdateFrequency = lightUpdateFrequency;
   
   for(int i = 0 ; i < MAX_LIGHTS ; i++){
     _currentStep[i] = 0;
@@ -129,7 +130,7 @@ int ShiftBriteM::performNextStep(){
       if(_animationFunction[i] != NULL){
         _commandNeeded = 1; //reset the bit since we're using animation functions
         int finished = 0;
-        _animationFunction[i](_lights[i], &_currentStep[i], colorCommand, &finished);
+        _animationFunction[i](_lights[i], &_currentStep[i], _lightUpdateFrequency, colorCommand, &finished);
         _currentStep[i]++;
         if(finished){
           _currentStep[i] = 0;
