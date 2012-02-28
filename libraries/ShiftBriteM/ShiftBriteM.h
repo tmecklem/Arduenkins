@@ -2,6 +2,8 @@
 #define ShiftBriteM_h
 
 #define MAX_LIGHTS 10
+//function is responsible for updating the rgb values in colorsForCommand (out variable) and indicating that it's finished with a true value. Finished animations will be removed from the animation list and the last value kept. referenceColor[] is the array of rgb values used in the setColor command. 
+typedef void (*animationFunctionPtr)(const uint16_t referenceColor[], int currentStep, uint16_t colorsForCommand[], int *finished);
 
 #include "Arduino.h"
 
@@ -10,6 +12,7 @@ class ShiftBriteM
 public:
   ShiftBriteM();
   ShiftBriteM(uint8_t numLights, uint8_t dataPin, uint8_t latchPin, uint8_t enablePin, uint8_t clockPin);
+  void setColor(uint8_t lightIndex, uint16_t r, uint16_t g, uint16_t b, animationFunctionPtr);
   void setColor(uint8_t lightIndex, uint16_t r, uint16_t g, uint16_t b);
   
   int performNextStep();
@@ -19,6 +22,8 @@ private:
 
   void _sendCommand(uint16_t r, uint16_t g, uint16_t b);
   uint16_t _lights[MAX_LIGHTS][3];
+  uint16_t _currentStep[MAX_LIGHTS];
+  animationFunctionPtr _animationFunction[MAX_LIGHTS];
 
   uint8_t _numLights;
 

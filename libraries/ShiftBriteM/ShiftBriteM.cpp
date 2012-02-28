@@ -24,9 +24,19 @@ ShiftBriteM::ShiftBriteM(uint8_t numLights, uint8_t dataPin, uint8_t latchPin, u
   digitalWrite(_ePin, LOW);
   
   _commandNeeded = 1;
+  
+  for(int i = 0 ; i < MAX_LIGHTS ; i++){
+    _currentStep[i] = 0;
+    _animationFunction[i] = NULL;
+  }
 }
 
 void ShiftBriteM::setColor(uint8_t lightIndex, uint16_t r, uint16_t g, uint16_t b)
+{
+  setColor(lightIndex, r, g, b, NULL);
+}
+
+void ShiftBriteM::setColor(uint8_t lightIndex, uint16_t r, uint16_t g, uint16_t b, animationFunctionPtr animationFunction)
 {
   if(lightIndex >= _numLights) {
     return;
@@ -35,6 +45,8 @@ void ShiftBriteM::setColor(uint8_t lightIndex, uint16_t r, uint16_t g, uint16_t 
   _lights[lightIndex][0] = r;
   _lights[lightIndex][1] = g;
   _lights[lightIndex][2] = b;
+  _currentStep[lightIndex] = 0;
+  _animationFunction[lightIndex] = animationFunction;
   _commandNeeded = 1;
 }
 
@@ -107,9 +119,21 @@ void ShiftBriteM::_activate(){
 }
 
 int ShiftBriteM::performNextStep(){
+  uint16_t colorCommand[3] = {0};
   if(_commandNeeded){
     for(int i = 0 ; i < _numLights ; i++){
-      _sendCommand(_lights[i][0], _lights[i][1], _lights[i][2]);
+      colorCommand[0] = _lights[i][0];
+      colorCommand[1] = _lights[i][1];
+      colorCommand[2] = _lights[i][2];
+      if(_animationFunction[i] != NULL){
+        int finished = 0;
+        _animationFunction[i](_lights[i], _currentStep[i], colorCommand, &finished);
+        if(finished){
+          _currentStep[i] = 0;
+          _animationFunction[i] = NULL;
+        }
+      }
+      _sendCommand(colorCommand[0], colorCommand[1], colorCommand[2]);
     }
     _activate();
     _commandNeeded = 0;
