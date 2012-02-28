@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <Ethernet.h>
 #include "ArduenkinsConfig.h"
 #include "Animations.h"
-#include "Animations.c"
 #include <JenkinsClient.h>
 #include <ShiftBriteM.h>
 #include <MemoryFree.h>
