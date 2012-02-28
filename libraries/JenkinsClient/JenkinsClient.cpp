@@ -55,6 +55,7 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer, c
   else {
     // if you didn't get a connection to the server:
     Serial.print(F("connection failed\n"));
+    _client->stop();
     return;
   }
   
