@@ -3,11 +3,13 @@
 
 ShiftBriteM::ShiftBriteM()
 {
-  ShiftBriteM(5,6,7,8);
+  ShiftBriteM(1,5,6,7,8);
 }
 
-ShiftBriteM::ShiftBriteM(int dataPin, int latchPin, int enablePin, int clockPin)
+ShiftBriteM::ShiftBriteM(uint8_t numLights, uint8_t dataPin, uint8_t latchPin, uint8_t enablePin, uint8_t clockPin)
 {
+  _numLights = numLights > MAX_LIGHTS ? MAX_LIGHTS : numLights;
+
   _dPin = dataPin;
   _lPin = latchPin;
   _ePin = enablePin;
@@ -20,11 +22,25 @@ ShiftBriteM::ShiftBriteM(int dataPin, int latchPin, int enablePin, int clockPin)
   
   digitalWrite(_lPin, LOW);
   digitalWrite(_ePin, LOW);
+  
+  _commandNeeded = 1;
 }
 
-void ShiftBriteM::sendColour(int r, int g, int b)
+void ShiftBriteM::setColor(uint8_t lightIndex, uint16_t r, uint16_t g, uint16_t b)
 {
-  if (r <= 1023 && g <= 1023 && b <= 1023) 
+  if(lightIndex >= _numLights) {
+    return;
+  }
+  
+  _lights[lightIndex][0] = r;
+  _lights[lightIndex][1] = g;
+  _lights[lightIndex][2] = b;
+  _commandNeeded = 1;
+}
+
+
+void ShiftBriteM::_sendCommand(uint16_t r, uint16_t g, uint16_t b) {
+if (r <= 1023 && g <= 1023 && b <= 1023) 
   {
     _SB_CommandMode = B00;
     _SB_RedCommand = r;
@@ -43,10 +59,10 @@ void ShiftBriteM::sendColour(int r, int g, int b)
     
     for(int i = 0; i < 7; i++)
     {
-      delay(100);
+      //delay(100);
       _SB_RedCommand = 1023;
       _SB_SendPacket();
-      delay(100);
+      //delay(100);
       _SB_RedCommand = 0;
       _SB_SendPacket();
     }
@@ -83,9 +99,20 @@ void ShiftBriteM::_SB_SendPacket()
 
 }
 
-void ShiftBriteM::activate(){
+void ShiftBriteM::_activate(){
   delay(1);
   digitalWrite(_lPin,HIGH);
   delay(1);
   digitalWrite(_lPin,LOW);
+}
+
+int ShiftBriteM::performNextStep(){
+  if(_commandNeeded){
+    for(int i = 0 ; i < _numLights ; i++){
+      _sendCommand(_lights[i][0], _lights[i][1], _lights[i][2]);
+    }
+    _activate();
+    _commandNeeded = 0;
+  }
+  return 2;
 }

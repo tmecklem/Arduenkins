@@ -46,11 +46,12 @@ ShiftBriteM sb;
 byte serverIP[] = JENKINS_IP;
 JenkinsClient jenkinsClient(serverIP, JENKINS_PORT, &client);
 char *jenkinsProjects[] = {PROJECT_0_NAME, PROJECT_1_NAME, PROJECT_2_NAME, PROJECT_3_NAME};
-  
+int cyclesBeforeRefresh = 0;
+
 void setup()
 {
   Serial.begin(9600);
-  sb = ShiftBriteM(SHIFTBRITE_DATA, SHIFTBRITE_LATCH, SHIFTBRITE_ENABLE, SHIFTBRITE_CLOCK);
+  sb = ShiftBriteM(NUM_SHIFTBRITES, SHIFTBRITE_DATA, SHIFTBRITE_LATCH, SHIFTBRITE_ENABLE, SHIFTBRITE_CLOCK);
   
   pinMode(4, OUTPUT); 
   digitalWrite(4, LOW); //disable SD
@@ -59,9 +60,9 @@ void setup()
   
   //init all purple (hopefully Jenkins doesn't have a purple status)
   for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
-    sb.sendColour(MAX,0,MAX);
+    sb.setColor(i,MAX,0,MAX);
   }
-  sb.activate();
+  sb.performNextStep();
   delay(20);
   
   byte mac[] = MAC_ADDRESS;
@@ -75,14 +76,14 @@ void setup()
       //blink like a moron so people know you're broken
       for(int delaySecs = 0 ; delaySecs < 15 ; delaySecs++){
         for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
-          sb.sendColour(1023,0,0);
+          sb.setColor(i,1023,0,0);
         }
-        sb.activate();
+        sb.performNextStep();
         delay(500);
         for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
-          sb.sendColour(0,0,0);
+          sb.setColor(i,0,0,0);
         }
-        sb.activate();
+        sb.performNextStep();
         delay(500);
       }
     }
@@ -95,9 +96,8 @@ void setup()
   Serial.println(Ethernet.localIP());
   
   for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
-    sb.sendColour(0,0,0);
+    sb.setColor(i,0,0,0);
   }
-  sb.activate();
   Serial.print(F("Started Up\n"));
 }
 
@@ -105,33 +105,41 @@ void loop()
 {
   //Serial.print(F("freeMemory()="));
   //Serial.println(freeMemory());
-  for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
-    Serial.print(F("Looking for project "));
-    Serial.println(jenkinsProjects[projectIndex]);
-    char color[24] = {'\0'};
-    jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color, JENKINS_PRE_JOB_URL, JENKINS_POST_JOB_URL);
-    if(!strlen(color)==0){
-      int found = 0;
-      Serial.print(F("Received color "));
-      Serial.println(color);
-      for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
-        if(strncmp(knownColors[i],color,3) == 0){
-          sb.sendColour(components[i][0], components[i][1], components[i][2]);
-          Serial.print(F("Setting ShiftBrite to color "));
-          Serial.println(knownColors[i]);
-          found = 1;
-          break;
+  
+  if( cyclesBeforeRefresh <=0 ) {
+    cyclesBeforeRefresh = (UPDATE_INTERVAL*10) - 1;
+    
+    for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
+      Serial.print(F("Looking for project "));
+      Serial.println(jenkinsProjects[projectIndex]);
+      char color[24] = {'\0'};
+      jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color, JENKINS_PRE_JOB_URL, JENKINS_POST_JOB_URL);
+      if(!strlen(color)==0){
+        int found = 0;
+        Serial.print(F("Received color "));
+        Serial.println(color);
+        for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
+          if(strncmp(knownColors[i],color,3) == 0){
+            sb.setColor(projectIndex, components[i][0], components[i][1], components[i][2]);
+            Serial.print(F("Setting ShiftBrite to color "));
+            Serial.println(knownColors[i]);
+            found = 1;
+            break;
+          }
         }
+        if(!found){
+          sb.setColor(projectIndex,0,0,0);
+        }
+      } else {
+        Serial.println(F("Failure, turning off light"));
+        sb.setColor(projectIndex,0,0,0);
       }
-      if(!found){
-        sb.sendColour(0,0,0);
-      }
-    } else {
-      Serial.println(F("Failure, turning off light"));
-      sb.sendColour(0,0,0);
     }
+    
   }
-  sb.activate();
-  //check again in a minute
-  delay(60000);
+  
+  int cyclesLost = sb.performNextStep();
+  //check again in a tenth of a second minus whatever it took to update the shiftbrites
+  delay((int)( ((float)1000) /LIGHT_UPDATE_FREQUENCY) - cyclesLost);
+  cyclesBeforeRefresh--;
 }
