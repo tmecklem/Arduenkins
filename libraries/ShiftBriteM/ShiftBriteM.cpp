@@ -104,10 +104,10 @@ void ShiftBriteM::_SB_SendPacket()
   _SB_CommandPacket = (_SB_CommandPacket << 10)  | (_SB_RedCommand & 1023);
   _SB_CommandPacket = (_SB_CommandPacket << 10)  | (_SB_GreenCommand & 1023);
 
-  shiftOutWithDelay(_dPin, _cPin, MSBFIRST, _SB_CommandPacket >> 24, 1);
-  shiftOutWithDelay(_dPin, _cPin, MSBFIRST, _SB_CommandPacket >> 16, 1);
-  shiftOutWithDelay(_dPin, _cPin, MSBFIRST, _SB_CommandPacket >> 8, 1);
-  shiftOutWithDelay(_dPin, _cPin, MSBFIRST, _SB_CommandPacket, 1);
+  shiftOutWithDelay(_dPin, _cPin, MSBFIRST, _SB_CommandPacket >> 24, 0);
+  shiftOutWithDelay(_dPin, _cPin, MSBFIRST, _SB_CommandPacket >> 16, 0);
+  shiftOutWithDelay(_dPin, _cPin, MSBFIRST, _SB_CommandPacket >> 8, 0);
+  shiftOutWithDelay(_dPin, _cPin, MSBFIRST, _SB_CommandPacket, 0);
 
 }
 
@@ -121,13 +121,16 @@ void ShiftBriteM::_activate(){
 int ShiftBriteM::performNextStep(){
   uint16_t colorCommand[3] = {0};
   if(_commandNeeded){
+    _commandNeeded = 0;
     for(int i = 0 ; i < _numLights ; i++){
       colorCommand[0] = _lights[i][0];
       colorCommand[1] = _lights[i][1];
       colorCommand[2] = _lights[i][2];
       if(_animationFunction[i] != NULL){
+        _commandNeeded = 1; //reset the bit since we're using animation functions
         int finished = 0;
-        _animationFunction[i](_lights[i], _currentStep[i], colorCommand, &finished);
+        _animationFunction[i](_lights[i], &_currentStep[i], colorCommand, &finished);
+        _currentStep[i]++;
         if(finished){
           _currentStep[i] = 0;
           _animationFunction[i] = NULL;
@@ -136,7 +139,6 @@ int ShiftBriteM::performNextStep(){
       _sendCommand(colorCommand[0], colorCommand[1], colorCommand[2]);
     }
     _activate();
-    _commandNeeded = 0;
   }
   return 2;
 }

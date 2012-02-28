@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <Dhcp.h>
 #include <Ethernet.h>
 #include "ArduenkinsConfig.h"
+#include "Animations.h"
+#include "Animations.c"
 #include <JenkinsClient.h>
 #include <ShiftBriteM.h>
 #include <MemoryFree.h>
@@ -120,7 +122,7 @@ void loop()
         Serial.println(color);
         for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
           if(strncmp(knownColors[i],color,3) == 0){
-            sb.setColor(projectIndex, components[i][0], components[i][1], components[i][2]);
+            sb.setColor(projectIndex, components[i][0], components[i][1], components[i][2], &pulseAnimation);
             Serial.print(F("Setting ShiftBrite to color "));
             Serial.println(knownColors[i]);
             found = 1;
