@@ -123,7 +123,8 @@ void loop()
         Serial.println(color);
         for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
           if(strncmp(knownColors[i],color,3) == 0){
-            sb.setColor(projectIndex, components[i][0], components[i][1], components[i][2], &pulseAnimation);
+            int animate = (strstr(color, "anime") != NULL)?1:0;
+            sb.setColor(projectIndex, components[i][0], components[i][1], components[i][2], animate?&pulseAnimation:NULL);
             Serial.print(F("Setting ShiftBrite to color "));
             Serial.println(knownColors[i]);
             found = 1;
