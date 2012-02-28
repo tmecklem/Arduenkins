@@ -108,7 +108,7 @@ void loop()
   //Serial.println(freeMemory());
   
   if( cyclesBeforeRefresh <=0 ) {
-    cyclesBeforeRefresh = (UPDATE_INTERVAL*10) - 1;
+    cyclesBeforeRefresh = (UPDATE_INTERVAL*LIGHT_UPDATE_FREQUENCY) - 1;
     
     for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
       Serial.print(F("Looking for project "));
