@@ -27,6 +27,7 @@
 #define PROJECT_2_NAME "Care360-2011.3.2"
 #define PROJECT_3_NAME "Care360-2011.3.1"
 
+#define SUCCESS_LIGHT_COLOR "green"
 
 /* ShiftBrite Pin Configuration */
 #define SHIFTBRITE_DATA 5

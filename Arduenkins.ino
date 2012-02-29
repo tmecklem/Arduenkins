@@ -122,9 +122,12 @@ void loop()
         int found = 0;
         Serial.print(F("Received color "));
         Serial.println(color);
+        int animate = (strstr(color, "anime") != NULL)?1:0;
+        int success = (strstr(color, "blue") != NULL)?1:0;
+        
         for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
-          if(strncmp(knownColors[i],color,3) == 0){
-            int animate = (strstr(color, "anime") != NULL)?1:0;
+          if( (!success && strncmp(knownColors[i],color,3) == 0 )
+              || (success && strncmp(knownColors[i],SUCCESS_LIGHT_COLOR,3) == 0)){
             sb.setColor(projectIndex, components[i][0], components[i][1], components[i][2], animate?&pulseAnimation:NULL);
             Serial.print(F("Setting ShiftBrite to color "));
             Serial.println(knownColors[i]);
