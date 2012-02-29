@@ -100,6 +100,8 @@ void setup()
     sb.setColor(i,0,0,0);
   }
   Serial.print(F("Started Up\n"));
+  
+  client.setTimeout(5000);
 }
 
 void loop()

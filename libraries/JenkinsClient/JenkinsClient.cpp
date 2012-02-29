@@ -67,18 +67,13 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer, c
   char status[31] = {'\0'};
   int pos = 0;
   
-  // if there are incoming bytes available 
-  // from the server, read them and print them:
-  if (_client->available()) {
-    int bytesRead = _client->readBytesUntil('\0',status,30);
-    Serial.println(status);
-  }
+  int bytesRead = _client->readBytesUntil('\0',status,30);
+  Serial.println(status);
+  _client->flush();
 
-  if (!_client->connected()) {
-    Serial.println();
-    Serial.print(F("disconnecting.\n"));;
-    _client->stop();
-  }
+  Serial.println();
+  Serial.print(F("disconnecting.\n"));;
+  _client->stop();
   
   char prefix[] = "{\"color\":\"";
   
