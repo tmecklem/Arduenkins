@@ -67,7 +67,8 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer, c
   char status[31] = {'\0'};
   int pos = 0;
   
-  int bytesRead = _client->readBytesUntil('\0',status,30);
+  //assuming that the project name won't have a } in it.
+  int bytesRead = _client->readBytesUntil('}',status,30);
   Serial.println(status);
   _client->flush();
 
@@ -83,7 +84,7 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer, c
   
   //Assuming things went well!
   int statusLength = strlen(status);
-  int endPosition = statusLength-strlen(prefix)-2;
+  int endPosition = statusLength-strlen(prefix)-1;
   strncpy(statusBuffer, status+(sizeof(char)*strlen(prefix)), endPosition);
   statusBuffer[endPosition] = '\0';
   
