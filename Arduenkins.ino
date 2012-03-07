@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <ShiftBriteM.h>
 #include <MemoryFree.h>
 #include <string.h>
+#include <avr/io.h>
+#include <avr/wdt.h>
 
 #define KNOWN_COLORS_SIZE 8
 #define MAX 768
@@ -102,6 +104,9 @@ void setup()
   Serial.print(F("Started Up\n"));
   
   client.setTimeout(5000);
+  
+  wdt_enable(WDTO_8S);
+  wdt_reset();
 }
 
 void loop()
@@ -142,6 +147,8 @@ void loop()
         Serial.println(F("Failure, turning off light"));
         sb.setColor(projectIndex,0,0,0);
       }
+      //reset the watchdog timer in case the request took a while
+      wdt_reset();
     }
     
   }
@@ -150,4 +157,6 @@ void loop()
   //check again in a tenth of a second minus whatever it took to update the shiftbrites
   delay((int)( ((float)1000) /LIGHT_UPDATE_FREQUENCY) - cyclesLost);
   cyclesBeforeRefresh--;
+  //reset the watchdog timer
+  wdt_reset();
 }
