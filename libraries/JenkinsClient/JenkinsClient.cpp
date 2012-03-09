@@ -26,7 +26,7 @@ JenkinsClient::JenkinsClient(uint8_t ip[], int port, EthernetClient *client) {
   _client = client;
 }
 
-void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer, char *preJobUrl, char *postJobUrl) {
+int JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer, char *preJobUrl, char *postJobUrl) {
 
   Serial.print(F("Making request to  IP:"));;
   Serial.print(_ip[0]);
@@ -56,7 +56,7 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer, c
     // if you didn't get a connection to the server:
     Serial.print(F("connection failed\n"));
     _client->stop();
-    return;
+    return 1;
   }
   
   
@@ -79,7 +79,7 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer, c
   char prefix[] = "{\"color\":\"";
   
   if(!strncmp(status, prefix, strlen(prefix))==0){
-    return;
+    return 0;
   }
   
   //Assuming things went well!
@@ -90,5 +90,7 @@ void JenkinsClient::getStatusForProject(char *projectName, char *statusBuffer, c
   
   //Serial.print(F("Found status: "));
   //Serial.println(statusBuffer);
+  
+  return 0;
   
 }

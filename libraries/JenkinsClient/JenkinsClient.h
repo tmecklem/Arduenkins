@@ -9,7 +9,8 @@ class JenkinsClient
 public:
   JenkinsClient();
   JenkinsClient(uint8_t ip[], int port, EthernetClient *client);
-  void getStatusForProject(char *projectName, char *statusBuffer, char *preJobUrl, char *postJobUrl);
+  /* returns 1 if failure to get connection */
+  int getStatusForProject(char *projectName, char *statusBuffer, char *preJobUrl, char *postJobUrl);
 private:
   EthernetClient *_client;
   uint8_t _ip[4];

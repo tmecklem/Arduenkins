@@ -26,8 +26,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <ShiftBriteM.h>
 #include <MemoryFree.h>
 #include <string.h>
-#include <avr/io.h>
-#include <avr/wdt.h>
 
 #define KNOWN_COLORS_SIZE 8
 #define MAX 768
@@ -50,23 +48,9 @@ byte serverIP[] = JENKINS_IP;
 JenkinsClient jenkinsClient(serverIP, JENKINS_PORT, &client);
 char *jenkinsProjects[] = {PROJECT_0_NAME, PROJECT_1_NAME, PROJECT_2_NAME, PROJECT_3_NAME};
 int cyclesBeforeRefresh = 0;
+int failureCount = 0;
 
-void setup()
-{
-  Serial.begin(9600);
-  sb = ShiftBriteM(NUM_SHIFTBRITES, SHIFTBRITE_DATA, SHIFTBRITE_LATCH, SHIFTBRITE_ENABLE, SHIFTBRITE_CLOCK, LIGHT_UPDATE_FREQUENCY);
-  
-  pinMode(4, OUTPUT); 
-  digitalWrite(4, LOW); //disable SD
-  pinMode(10, OUTPUT); 
-  digitalWrite(10, HIGH); //enable ethernet
-  
-  //init all purple (hopefully Jenkins doesn't have a purple status)
-  for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
-    sb.setColor(i,MAX,0,MAX);
-  }
-  sb.performNextStep();
-  delay(20);
+void initializeEthernet() {
   
   byte mac[] = MAC_ADDRESS;
   if(!USE_DHCP){
@@ -97,6 +81,26 @@ void setup()
   
   Serial.print(F("Local IP is: "));
   Serial.println(Ethernet.localIP());
+}
+
+void setup()
+{
+  Serial.begin(9600);
+  sb = ShiftBriteM(NUM_SHIFTBRITES, SHIFTBRITE_DATA, SHIFTBRITE_LATCH, SHIFTBRITE_ENABLE, SHIFTBRITE_CLOCK, LIGHT_UPDATE_FREQUENCY);
+  
+  pinMode(4, OUTPUT); 
+  digitalWrite(4, LOW); //disable SD
+  pinMode(10, OUTPUT); 
+  digitalWrite(10, HIGH); //enable ethernet
+  
+  //init all purple (hopefully Jenkins doesn't have a purple status)
+  for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
+    sb.setColor(i,MAX,0,MAX);
+  }
+  sb.performNextStep();
+  delay(20);
+  
+  initializeEthernet();
   
   for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
     sb.setColor(i,0,0,0);
@@ -104,9 +108,24 @@ void setup()
   Serial.print(F("Started Up\n"));
   
   client.setTimeout(5000);
-  
-  wdt_enable(WDTO_8S);
-  wdt_reset();
+}
+
+/* This is to work around a bug in the ethernet client code for the 5100 which causes it to 
+have... trouble after a while. Supposedly fixed in 1.0.1 (not out yet) */
+void doWorkaround(int failure, int *failureCount){
+  if(failure){
+    (*failureCount) = (*failureCount) + 1;
+    Serial.print(F("Failure count is now "));
+    Serial.println(*failureCount);
+    if(*failureCount >= 10) {
+      Serial.println(F("Maximum consecutive failures reached, resetting ethernet"));
+      initializeEthernet();
+      *failureCount = 0;
+    }
+  } else {
+    //reset failure count
+    *failureCount = 0; 
+  }
 }
 
 void loop()
@@ -122,7 +141,16 @@ void loop()
       Serial.println(jenkinsProjects[projectIndex]);
       char color[24] = {'\0'};
       //TODO: spread out these requests so that the animations don't stop for so long...
-      jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color, JENKINS_PRE_JOB_URL, JENKINS_POST_JOB_URL);
+      int retry = 0;
+      int failure = 0;
+      while(failure = jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color, JENKINS_PRE_JOB_URL, JENKINS_POST_JOB_URL) == 1 && retry < 5){
+        doWorkaround(failure, &failureCount);
+        retry++;
+      }
+      if(retry < 5) {
+        //we succeeded without hitting the max count, so allow the failureCount to reset
+        doWorkaround(failure, &failureCount);
+      }
       if(!strlen(color)==0){
         int found = 0;
         Serial.print(F("Received color "));
@@ -147,8 +175,6 @@ void loop()
         Serial.println(F("Failure, turning off light"));
         sb.setColor(projectIndex,0,0,0);
       }
-      //reset the watchdog timer in case the request took a while
-      wdt_reset();
     }
     
   }
@@ -157,6 +183,4 @@ void loop()
   //check again in a tenth of a second minus whatever it took to update the shiftbrites
   delay((int)( ((float)1000) /LIGHT_UPDATE_FREQUENCY) - cyclesLost);
   cyclesBeforeRefresh--;
-  //reset the watchdog timer
-  wdt_reset();
 }
