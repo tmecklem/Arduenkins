@@ -17,6 +17,7 @@
 
 #define UPDATE_INTERVAL 60 //in seconds
 #define LIGHT_UPDATE_FREQUENCY 20 //in Hz
+#define ENABLE_WATCHDOG 0 //set to 1, resets after a freeze. Doesn't seem to work with the Arduino boot loader, which has a delay on startup and causes infinite resets. Does work with a programmer.
 
 /* Jenkins Job Configuration */
 //NUM_SHIFTBRITES should be the same as the number of projects you have listed below

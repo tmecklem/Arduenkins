@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <ShiftBriteM.h>
 #include <MemoryFree.h>
 #include <string.h>
+#include <avr/io.h>
+#include <avr/wdt.h>
 
 #define KNOWN_COLORS_SIZE 8
 #define MAX 768
@@ -49,6 +51,9 @@ JenkinsClient jenkinsClient(serverIP, JENKINS_PORT, &client);
 char *jenkinsProjects[] = {PROJECT_0_NAME, PROJECT_1_NAME, PROJECT_2_NAME, PROJECT_3_NAME};
 int cyclesBeforeRefresh = 0;
 int failureCount = 0;
+
+// Function Pototype
+void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 
 void initializeEthernet() {
   
@@ -85,6 +90,9 @@ void initializeEthernet() {
 
 void setup()
 {
+  wdt_init();
+  wdt_disable();
+  
   Serial.begin(9600);
   sb = ShiftBriteM(NUM_SHIFTBRITES, SHIFTBRITE_DATA, SHIFTBRITE_LATCH, SHIFTBRITE_ENABLE, SHIFTBRITE_CLOCK, LIGHT_UPDATE_FREQUENCY);
   
@@ -108,6 +116,10 @@ void setup()
   Serial.print(F("Started Up\n"));
   
   client.setTimeout(5000);
+  
+  if(ENABLE_WATCHDOG){
+    wdt_enable(WDTO_8S);
+  }
 }
 
 /* This is to work around a bug in the ethernet client code for the 5100 which causes it to 
@@ -176,11 +188,27 @@ void loop()
         sb.setColor(projectIndex,0,0,0);
       }
     }
-    
+    if(ENABLE_WATCHDOG){
+      //reset the watchdog timer in case the request took a while
+      wdt_reset();
+    }
   }
   
   int cyclesLost = sb.performNextStep();
   //check again in a tenth of a second minus whatever it took to update the shiftbrites
   delay((int)( ((float)1000) /LIGHT_UPDATE_FREQUENCY) - cyclesLost);
   cyclesBeforeRefresh--;
+  
+  if(ENABLE_WATCHDOG){
+    wdt_reset();
+  }
+}
+
+// Function Implementation
+void wdt_init(void)
+{
+    MCUSR = 0;
+    wdt_disable();
+
+    return;
 }
