@@ -18,13 +18,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include <SPI.h>
-#include <Dhcp.h>
+//#include <Dhcp.h>
 #include <Ethernet.h>
 #include "ArduenkinsConfig.h"
 #include "Animations.h"
 #include <JenkinsClient.h>
 #include <ShiftBriteM.h>
-#include <MemoryFree.h>
 #include <string.h>
 #include <avr/io.h>
 #include <avr/wdt.h>
@@ -46,33 +45,63 @@ int components[][3]={  RED,  GREEN, BLUE, YELLOW, CYAN, MAGENTA, OFF, WHITE };
 // initialize the library instance:
 EthernetClient client;
 ShiftBriteM sb;
-byte serverIP[] = JENKINS_IP;
-JenkinsClient jenkinsClient(serverIP, JENKINS_PORT, &client);
-char *jenkinsProjects[] = {PROJECT_0_NAME, PROJECT_1_NAME, PROJECT_2_NAME, PROJECT_3_NAME};
+byte serverIP[] = CONFIG_IP;
+JenkinsClient jenkinsClient(serverIP, CONFIG_PORT, &client, CONFIG_LOCATION);
+char *jenkinsProjects[] = {};
 int cyclesBeforeRefresh = 0;
+int cyclesBeforeReinitialization = 0;
 int failureCount = 0;
+
+int numberOfJobsConfigured = 0;
 
 // Function Pototype
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
+
+int freeRam() {
+  int byteCounter = 0; // ini­tial­ize a counter
+  byte *byteArray; // cre­ate a pointer to a byte array
+  // More on point­ers here: http://en.wikipedia.org/wiki/Pointer#C_pointers
+
+  // use the mal­loc func­tion to repeat­edly attempt allo­cat­ing a cer­tain num­ber of bytes to mem­ory
+  // More on mal­loc here: http://en.wikipedia.org/wiki/Malloc
+  while ( (byteArray = (byte*) malloc (byteCounter * sizeof(byte))) != NULL ) {
+    byteCounter++; // if allo­ca­tion was suc­cess­ful, then up the count for the next try
+    free(byteArray); // free mem­ory after allo­cat­ing it
+  }
+  
+  free(byteArray); // also free mem­ory after the func­tion fin­ishes
+  return byteCounter; // send back the high­est num­ber of bytes suc­cess­fully allo­cated
+}
 
 void initializeEthernet() {
   
   byte mac[] = MAC_ADDRESS;
   if(!USE_DHCP){
     byte staticIP[] = STATIC_IP;
+    Serial.print(F("Configuring Ethernet with static IP "));
+    Serial.print(staticIP[0]);
+    Serial.print(F("."));;
+    Serial.print(staticIP[1]);
+    Serial.print(F("."));;
+    Serial.print(staticIP[2]);
+    Serial.print(F("."));;
+    Serial.println(staticIP[3]);
+    Serial.print(F("freeMemory()="));
+    Serial.println(freeRam());
     Ethernet.begin(mac, staticIP);
+    Serial.println(F("Ethernet.begin finished"));
   } else {
     Serial.println(F("Configuring Ethernet via DHCP"));
     while (Ethernet.begin(mac) == 0) {
       Serial.println(F("Failed to configure Ethernet using DHCP"));
       //blink like a moron so people know you're broken
       for(int delaySecs = 0 ; delaySecs < 15 ; delaySecs++){
-        for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
+        for(int i = 0 ; i < NUM_LIGHTS ; i++){
           sb.setColor(i,1023,0,0);
         }
         sb.performNextStep();
         delay(500);
-        for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
+        for(int i = 0 ; i < NUM_LIGHTS ; i++){
           sb.setColor(i,0,0,0);
         }
         sb.performNextStep();
@@ -94,7 +123,11 @@ void setup()
   wdt_disable();
   
   Serial.begin(9600);
-  sb = ShiftBriteM(NUM_SHIFTBRITES, SHIFTBRITE_DATA, SHIFTBRITE_LATCH, SHIFTBRITE_ENABLE, SHIFTBRITE_CLOCK, LIGHT_UPDATE_FREQUENCY);
+  while (!Serial){
+    ;
+  }
+  Serial.println(F("Booting app."));
+  sb = ShiftBriteM(NUM_LIGHTS, SHIFTBRITE_DATA, SHIFTBRITE_LATCH, SHIFTBRITE_ENABLE, SHIFTBRITE_CLOCK, LIGHT_UPDATE_FREQUENCY);
   
   pinMode(4, OUTPUT); 
   digitalWrite(4, LOW); //disable SD
@@ -102,7 +135,7 @@ void setup()
   digitalWrite(10, HIGH); //enable ethernet
   
   //init all purple (hopefully Jenkins doesn't have a purple status)
-  for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
+  for(int i = 0 ; i < NUM_LIGHTS ; i++){
     sb.setColor(i,MAX,0,MAX);
   }
   sb.performNextStep();
@@ -110,16 +143,17 @@ void setup()
   
   initializeEthernet();
   
-  for(int i = 0 ; i < NUM_SHIFTBRITES ; i++){
+  for(int i = 0 ; i < NUM_LIGHTS ; i++){
     sb.setColor(i,0,0,0);
   }
-  Serial.print(F("Started Up\n"));
+  Serial.println(F("Started Up"));
   
   client.setTimeout(5000);
   
   if(ENABLE_WATCHDOG){
     wdt_enable(WDTO_8S);
   }
+  
 }
 
 /* This is to work around a bug in the ethernet client code for the 5100 which causes it to 
@@ -142,20 +176,33 @@ void doWorkaround(int failure, int *failureCount){
 
 void loop()
 {
-  //Serial.print(F("freeMemory()="));
-  //Serial.println(freeMemory());
+  
+  if(cyclesBeforeReinitialization <= 0) {
+    Serial.print(F("freeMemory()="));
+    Serial.println(freeRam());
+    Serial.print(F("Re-initializing from configuration site"));
+    numberOfJobsConfigured = jenkinsClient.initializeConfiguration();
+    if(numberOfJobsConfigured > 0){
+      cyclesBeforeReinitialization = (UPDATE_INTERVAL*LIGHT_UPDATE_FREQUENCY) - 1;
+    }
+    if(ENABLE_WATCHDOG){
+      //reset the watchdog timer in case the request took a while
+      wdt_reset();
+    }
+    cyclesBeforeRefresh = 0;
+  }
   
   if( cyclesBeforeRefresh <=0 ) {
     cyclesBeforeRefresh = (UPDATE_INTERVAL*LIGHT_UPDATE_FREQUENCY) - 1;
     
-    for(int projectIndex = 0 ; projectIndex < NUM_SHIFTBRITES ; projectIndex++){
-      Serial.print(F("Looking for project "));
-      Serial.println(jenkinsProjects[projectIndex]);
+    for(int projectIndex = 0 ; projectIndex < numberOfJobsConfigured ; projectIndex++){
+      Serial.print(F("Updating project "));
+      Serial.println(projectIndex);
       char color[24] = {'\0'};
       //TODO: spread out these requests so that the animations don't stop for so long...
       int retry = 0;
       int failure = 0;
-      while(failure = jenkinsClient.getStatusForProject(jenkinsProjects[projectIndex], color, JENKINS_PRE_JOB_URL, JENKINS_POST_JOB_URL) == 1 && retry < 5){
+      while(failure = jenkinsClient.getStatusForProject(projectIndex, color) == 1 && retry < 5){
         doWorkaround(failure, &failureCount);
         retry++;
       }
@@ -198,6 +245,7 @@ void loop()
   //check again in a tenth of a second minus whatever it took to update the shiftbrites
   delay((int)( ((float)1000) /LIGHT_UPDATE_FREQUENCY) - cyclesLost);
   cyclesBeforeRefresh--;
+  cyclesBeforeReinitialization--;
   
   if(ENABLE_WATCHDOG){
     wdt_reset();
