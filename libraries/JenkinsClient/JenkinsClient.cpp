@@ -19,14 +19,9 @@ JenkinsClient::JenkinsClient(uint8_t configIp[], uint16_t configPort, EthernetCl
   
   _port = configPort;
   
-  Serial.print(F("Config IP saved as "));;
-  Serial.print(_ip[0]);
-  Serial.print(F("."));;
-  Serial.print(_ip[1]);
-  Serial.print(F("."));;
-  Serial.print(_ip[2]);
-  Serial.print(F("."));;
-  Serial.println(_ip[3]);
+  Serial.print(F("Config IP saved as "));
+  printIp(_ip);
+  Serial.println();
   
   _client = client;
   _configurationLocation = configurationLocation;
@@ -97,13 +92,7 @@ int JenkinsClient::parseJob(char *jobConfig, JenkinsJob *job) {
   
 #ifdef DEBUG_JENKINS_CLIENT  
   Serial.print(F("Job configuration saved as "));
-  Serial.print(job->ip[0]);
-  Serial.print(F("."));;
-  Serial.print(job->ip[1]);
-  Serial.print(F("."));;
-  Serial.print(job->ip[2]);
-  Serial.print(F("."));;
-  Serial.print(job->ip[3]);
+  printIp(job->ip);
   Serial.print(F(":"));
   Serial.print(job->port);
   Serial.println(job->jobUrl);
@@ -130,13 +119,7 @@ int JenkinsClient::initializeConfiguration(){
 
 #ifdef DEBUG_JENKINS_CLIENT  
   Serial.print(F("Requesting configuration from http://"));
-  Serial.print(_ip[0]);
-  Serial.print(F("."));
-  Serial.print(_ip[1]);
-  Serial.print(F("."));
-  Serial.print(_ip[2]);
-  Serial.print(F("."));
-  Serial.print(_ip[3]);
+  printIp(_ip);
   Serial.print(F(":"));
   Serial.print(_port);
   Serial.println(_configurationLocation);
@@ -228,13 +211,8 @@ uint16_t JenkinsClient::getStatusForProject(int jobNumber) {
   JenkinsJob *job = _jobs[jobNumber];
 #ifdef DEBUG_JENKINS_CLIENT  
   Serial.print(F("Making request to  IP:"));
-  Serial.print(job->ip[0]);
-  Serial.print(F("."));
-  Serial.print(job->ip[1]);
-  Serial.print(F("."));
-  Serial.print(job->ip[2]);
-  Serial.print(F("."));
-  Serial.println(job->ip[3]);
+  printIp(job->ip);
+  Serial.println();
 #endif
 
   // if you get a connection, report back via serial:
@@ -303,3 +281,11 @@ uint16_t JenkinsClient::getStatusForProject(int jobNumber) {
 
   return disposition;
 }
+
+void JenkinsClient::printIp(uint8_t ip[]) {
+  for(int i = 0 ; i < 4 ; i++){
+    Serial.print(ip[i]);
+    if(i<3) { Serial.print(F(".")); }
+  }
+}
+

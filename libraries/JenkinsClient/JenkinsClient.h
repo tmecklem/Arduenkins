@@ -36,7 +36,8 @@ private:
   JenkinsJob *createJob();
   void clearJob(JenkinsJob *job);
   void resetJobs();
-  
+  void printIp(uint8_t ip[]);
+
   EthernetClient *_client;
   uint8_t _ip[4];
   uint16_t _port;
