@@ -1,0 +1,4 @@
+192.168.10.106,8080,/jenkins/job/tribes-ios
+192.168.10.106,8080,/jenkins/job/vbs-ios,/jenkins/job/tribes-ios
+192.168.10.106,8080,/jenkins/job/sanity%20check
+192.168.10.106,8080,/jenkins/job/tribes-ios

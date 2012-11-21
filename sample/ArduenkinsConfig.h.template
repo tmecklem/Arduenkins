@@ -1,0 +1,26 @@
+/* Network Setup */
+//Look under your ethernet shield, there's a sticker with the MAC address
+#define MAC_ADDRESS {0x90, 0xA2, 0xDA, 0x00, 0xFD, 0x1D}
+//If USE_DHCP is 1, will attempt to automatically acquire an IP address
+#define USE_DHCP 0
+//If USE_DHCP is 0, the ethernet shield will use this static IP
+#define STATIC_IP {192,168,10,34}
+
+/* Jenkins Server Configuration */
+//The IP address and port number for your configuration server
+#define CONFIG_IP {192,168,10,148}
+#define CONFIG_PORT 80
+#define CONFIG_LOCATION "/config.txt"
+
+#define UPDATE_INTERVAL 15 //in seconds
+#define LIGHT_UPDATE_FREQUENCY 20 //in Hz
+#define ENABLE_WATCHDOG 0
+
+/* Jenkins Job Configuration */
+#define NUM_LIGHTS 4
+
+/* ShiftBrite Pin Configuration */
+#define SHIFTBRITE_DATA 5
+#define SHIFTBRITE_LATCH 6
+#define SHIFTBRITE_ENABLE 7
+#define SHIFTBRITE_CLOCK 8
