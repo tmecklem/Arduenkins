@@ -4,7 +4,7 @@
 
 #define JENKINS_POST_JOB_URL "/api/json?tree=color"
 #define LINK_JOBS 2
-//#define DEBUG_JENKINS_CLIENT //Uncomment to print debug statements over serial
+#define DEBUG_JENKINS_CLIENT //Uncomment to print debug statements over serial
 
 JenkinsClient::JenkinsClient() {
   uint8_t server[] = {192,168,0,1};
@@ -28,19 +28,23 @@ JenkinsClient::JenkinsClient(uint8_t configIp[], uint16_t configPort, EthernetCl
 }
 
 void JenkinsClient::clearJob(JenkinsJob *job) {
-  if(job->jobUrl != NULL){
-    free(job->jobUrl);
+  for(int i = 0 ; i < MAX_LOCATIONS_PER_LINE ; i++){
+	free(job->jobLocations[i]);
+    job->jobLocations[i] = NULL;
   }
+
   free(job);
 }
 
 JenkinsJob *JenkinsClient::createJob(){
   JenkinsJob *job = (JenkinsJob *)malloc(sizeof(JenkinsJob));
-  job->jobUrl = (char *)malloc(sizeof(char) * MAX_CONFIG_LINE_LENGTH + 1);
-  if(job ==NULL || job->jobUrl == NULL){
+  for(int i = 0 ; i < MAX_LOCATIONS_PER_LINE ; i++){
+    job->jobLocations[i] = NULL;
+  }
+
+  if(job ==NULL){
     Serial.println(F("Unable to allocate memory for a new job configuration"));
   }
-  job->jobUrl[MAX_CONFIG_LINE_LENGTH] = NULL;
   for(int i = 0 ; i < 4 ; i++){
     job->ip[i] = 0;
   }
@@ -81,8 +85,12 @@ int JenkinsClient::parseJob(char *jobConfig, JenkinsJob *job) {
 	  }
 	} else if (tokenIndex == 4){
 	  job->port = atol(token);
-	} else if(tokenIndex == 5){
-	  strncpy (job->jobUrl, token, MAX_CONFIG_LINE_LENGTH );
+	} else if(tokenIndex >= 5 && (tokenIndex - 5) < MAX_LOCATIONS_PER_LINE){
+	  int locationIndex = tokenIndex - 5;
+	  int lengthOfLocation = strlen(token);
+	  job->jobLocations[locationIndex] = (char *)malloc(sizeof(char)*lengthOfLocation + 1);
+	  strncpy (job->jobLocations[locationIndex], token, lengthOfLocation );
+	  job->jobLocations[locationIndex][lengthOfLocation] = NULL;
 	  returnCode = 0;
 	}
 	
@@ -95,7 +103,10 @@ int JenkinsClient::parseJob(char *jobConfig, JenkinsJob *job) {
   printIp(job->ip);
   Serial.print(F(":"));
   Serial.print(job->port);
-  Serial.println(job->jobUrl);
+  for(int i = 0 ; i < MAX_LOCATIONS_PER_LINE ; i++){
+    Serial.print(job->jobLocations[i]);
+  }
+  Serial.println();
 #endif
   
   return returnCode;
@@ -221,12 +232,12 @@ uint16_t JenkinsClient::getStatusForProject(int jobNumber) {
     Serial.print(F("connected\n"));
     // Make a HTTP request:
     Serial.print(F("GET "));
-    Serial.print(job->jobUrl);
+    Serial.print(job->jobLocations[0]);
     Serial.println(JENKINS_POST_JOB_URL);
 #endif
 
     _client->print("GET ");
-    _client->print(job->jobUrl);
+    _client->print(job->jobLocations[0]);
     _client->println(JENKINS_POST_JOB_URL);
   } 
   else {

@@ -6,6 +6,7 @@
 
 #define MAX_CONFIG_LINE_LENGTH 100
 #define MAX_SUPPORTED_JOBS 5
+#define MAX_LOCATIONS_PER_LINE 4
 
 #define JOB_INVALID_STATUS 0x00
 #define JOB_DISABLED 0x01
@@ -18,8 +19,7 @@
 typedef struct JenkinsJob {
   uint8_t ip[4];
   uint16_t port;
-  char *jobUrl;
-  JenkinsJob* linkedJob;
+  char *jobLocations[MAX_LOCATIONS_PER_LINE];
 } JenkinsJob;
 
 class JenkinsClient
