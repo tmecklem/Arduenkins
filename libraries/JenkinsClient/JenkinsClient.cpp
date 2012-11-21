@@ -4,6 +4,7 @@
 
 #define JENKINS_POST_JOB_URL "/api/json?tree=color"
 #define LINK_JOBS 2
+//#define DEBUG_JENKINS_CLIENT //Uncomment to print debug statements over serial
 
 JenkinsClient::JenkinsClient() {
   uint8_t server[] = {192,168,0,1};
@@ -57,24 +58,30 @@ int JenkinsClient::parseJob(char *jobConfig, JenkinsJob *job) {
   int switchToCommas = 0;
   int returnCode = 1;
   char *localJobConfigPtr = jobConfig;
+#ifdef DEBUG_JENKINS_CLIENT  
   Serial.print(F("Job config string is "));
   Serial.println(localJobConfigPtr);
+#endif
 
   char *token;
   char *end_str;
   token = strsep (&localJobConfigPtr,".");
   int tokenIndex = 0;
   while (token != NULL){
+#ifdef DEBUG_JENKINS_CLIENT    
     Serial.print(F("Token "));
     Serial.print(token);
     Serial.print(F(" found at index "));
     Serial.println(tokenIndex);
     Serial.print(F("Remaining string is "));
     Serial.println(localJobConfigPtr);
+#endif
 	if(tokenIndex <= 3){
 	  job->ip[tokenIndex] = atoi(token);
 	  if(tokenIndex == 2) {
-        //Serial.println(F("Changing token delimiter to ','"));
+#ifdef DEBUG_JENKINS_CLIENT  
+        Serial.println(F("Changing token delimiter to ','"));
+#endif
 	    switchToCommas = 1;
 	  }
 	} else if (tokenIndex == 4){
@@ -88,6 +95,7 @@ int JenkinsClient::parseJob(char *jobConfig, JenkinsJob *job) {
 	tokenIndex++;
   }
   
+#ifdef DEBUG_JENKINS_CLIENT  
   Serial.print(F("Job configuration saved as "));
   Serial.print(job->ip[0]);
   Serial.print(F("."));;
@@ -99,6 +107,7 @@ int JenkinsClient::parseJob(char *jobConfig, JenkinsJob *job) {
   Serial.print(F(":"));
   Serial.print(job->port);
   Serial.println(job->jobUrl);
+#endif
   
   return returnCode;
 }
@@ -115,14 +124,11 @@ void JenkinsClient::resetJobs(){
   _numConfiguredJobs = 0;
 }
 
-/**
- * returns the number of jobs available for status updates per the server config, 
- * or -1 if a problem occurred in retrieving configuration
- */
 int JenkinsClient::initializeConfiguration(){
   
   resetJobs();
 
+#ifdef DEBUG_JENKINS_CLIENT  
   Serial.print(F("Requesting configuration from http://"));
   Serial.print(_ip[0]);
   Serial.print(F("."));
@@ -134,12 +140,15 @@ int JenkinsClient::initializeConfiguration(){
   Serial.print(F(":"));
   Serial.print(_port);
   Serial.println(_configurationLocation);
+#endif
   
   if (_client->connect(_ip, _port)) {
+#ifdef DEBUG_JENKINS_CLIENT  
     Serial.print(F("connected\n"));;
     // Make a HTTP request:
     Serial.print(F("GET "));
     Serial.print(_configurationLocation);
+#endif
 
     _client->print("GET ");
     _client->print(_configurationLocation);
@@ -167,18 +176,26 @@ int JenkinsClient::initializeConfiguration(){
       char nextChar = _client->read();
       if(nextChar == '\n'){
         configResponse[position++] = NULL;
+#ifdef DEBUG_JENKINS_CLIENT  
         Serial.print(F("Found a job configuration: "));
         Serial.println(configResponse);
+#endif
     
         JenkinsJob *job = createJob();
         int status = parseJob(configResponse, job);
+#ifdef DEBUG_JENKINS_CLIENT  
         Serial.print(F("parseJob return status was "));
         Serial.println(status);
+#endif
         if(status == 0){
+#ifdef DEBUG_JENKINS_CLIENT  
           Serial.print(F("Adding job"));
+#endif
          _jobs[_numConfiguredJobs++] = job;
         } else {
+#ifdef DEBUG_JENKINS_CLIENT  
           Serial.println(F("Something went wrong, cleaning up job allocation"));
+#endif
           clearJob(job);
         }
         position = 0;
@@ -194,11 +211,12 @@ int JenkinsClient::initializeConfiguration(){
   _client->flush();
   free(configResponse);
 
+#ifdef DEBUG_JENKINS_CLIENT  
   Serial.println();
-  Serial.print(F("disconnecting.\n"));;
+  Serial.print(F("disconnecting.\n"));
+#endif
   _client->stop();
   
-  //Assuming things went well!
   Serial.print(F("Jobs Configured: "));
   Serial.println(_numConfiguredJobs);
   return _numConfiguredJobs;
@@ -208,6 +226,7 @@ uint16_t JenkinsClient::getStatusForProject(int jobNumber) {
   uint16_t disposition = 0;
 
   JenkinsJob *job = _jobs[jobNumber];
+#ifdef DEBUG_JENKINS_CLIENT  
   Serial.print(F("Making request to  IP:"));
   Serial.print(job->ip[0]);
   Serial.print(F("."));
@@ -216,14 +235,17 @@ uint16_t JenkinsClient::getStatusForProject(int jobNumber) {
   Serial.print(job->ip[2]);
   Serial.print(F("."));
   Serial.println(job->ip[3]);
+#endif
 
   // if you get a connection, report back via serial:
   if (_client->connect(job->ip, job->port)) {
-    Serial.print(F("connected\n"));;
+#ifdef DEBUG_JENKINS_CLIENT  
+    Serial.print(F("connected\n"));
     // Make a HTTP request:
     Serial.print(F("GET "));
     Serial.print(job->jobUrl);
     Serial.println(JENKINS_POST_JOB_URL);
+#endif
 
     _client->print("GET ");
     _client->print(job->jobUrl);
@@ -231,7 +253,9 @@ uint16_t JenkinsClient::getStatusForProject(int jobNumber) {
   } 
   else {
     // if you didn't get a connection to the server:
+#ifdef DEBUG_JENKINS_CLIENT  
     Serial.print(F("connection failed\n"));
+#endif
     _client->stop();
     return JOB_INVALID_STATUS;
   }
@@ -245,12 +269,16 @@ uint16_t JenkinsClient::getStatusForProject(int jobNumber) {
   
   //assuming that the project name won't have a } in it.
   int bytesRead = _client->readBytesUntil('}',status,30);
-  status[bytesRead] = '\0';
+  status[bytesRead] = NULL;
+#ifdef DEBUG_JENKINS_CLIENT  
   Serial.println(status);
+#endif
   _client->flush();
-
+  
+#ifdef DEBUG_JENKINS_CLIENT  
   Serial.println();
-  Serial.print(F("disconnecting.\n"));;
+  Serial.println(F("disconnecting."));
+#endif
   _client->stop();
   
   char prefix[] = "{\"color\":\"";
@@ -266,10 +294,12 @@ uint16_t JenkinsClient::getStatusForProject(int jobNumber) {
   disposition |= (strstr(status, "grey") != NULL) ? JOB_CANCELED : 0;
   disposition |= (strstr(status, "anime") != NULL) ? JOB_IN_PROGRESS : 0;
   
+#ifdef DEBUG_JENKINS_CLIENT  
   Serial.print(F("Found status: "));
   Serial.println(status);
   Serial.print(F("Mapped to disposition: "));
   Serial.println(disposition, BIN);
+#endif
 
   return disposition;
 }
