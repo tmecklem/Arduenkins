@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <Ethernet.h>
 #include "ArduenkinsConfig.h"
 #include "Animations.h"
-#include <JenkinsClient.h>
+#include <BuildLightConfigurationManager.h>
 #include <ShiftBriteM.h>
 #include <string.h>
 #include <avr/io.h>
@@ -51,7 +51,7 @@ int components[][3]={  RED,  GREEN, BLUE, YELLOW, CYAN, MAGENTA, OFF, WHITE };
 EthernetClient client;
 ShiftBriteM sb;
 byte serverIP[] = CONFIG_IP;
-JenkinsClient jenkinsClient(serverIP, CONFIG_PORT, &client, CONFIG_LOCATION);
+BuildLightConfigurationManager jenkinsClient(serverIP, CONFIG_PORT, &client, CONFIG_LOCATION);
 char *jenkinsProjects[] = {};
 int cyclesBeforeRefresh = 0;
 int cyclesBeforeReinitialization = 0;
