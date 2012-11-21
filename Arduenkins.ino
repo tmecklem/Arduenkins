@@ -39,6 +39,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define OFF {0,0,0}
 #define WHITE {511,511,511}
 
+#define FAILED 0
+#define SUCCEEDED 1
+#define UNSTABLE 3
+#define CANCELED 7
+#define DISABLED 6
 char* knownColors[]={  "red", "green", "blue", "yellow", "cyan", "magenta", "off", "aborted" };
 int components[][3]={  RED,  GREEN, BLUE, YELLOW, CYAN, MAGENTA, OFF, WHITE };
 
@@ -180,7 +185,7 @@ void loop()
   if(cyclesBeforeReinitialization <= 0) {
     Serial.print(F("freeMemory()="));
     Serial.println(freeRam());
-    Serial.print(F("Re-initializing from configuration site"));
+    Serial.println(F("Re-initializing from configuration site"));
     numberOfJobsConfigured = jenkinsClient.initializeConfiguration();
     if(numberOfJobsConfigured > 0){
       cyclesBeforeReinitialization = (UPDATE_INTERVAL*LIGHT_UPDATE_FREQUENCY) - 1;
@@ -198,11 +203,11 @@ void loop()
     for(int projectIndex = 0 ; projectIndex < numberOfJobsConfigured ; projectIndex++){
       Serial.print(F("Updating project "));
       Serial.println(projectIndex);
-      char color[24] = {'\0'};
-      //TODO: spread out these requests so that the animations don't stop for so long...
       int retry = 0;
       int failure = 0;
-      while(failure = jenkinsClient.getStatusForProject(projectIndex, color) == 1 && retry < 5){
+      uint16_t status = 0;
+      
+      while( (status = jenkinsClient.getStatusForProject(projectIndex)) == JOB_INVALID_STATUS && retry < 5){
         doWorkaround(failure, &failureCount);
         retry++;
       }
@@ -210,26 +215,25 @@ void loop()
         //we succeeded without hitting the max count, so allow the failureCount to reset
         doWorkaround(failure, &failureCount);
       }
-      if(!strlen(color)==0){
-        int found = 0;
-        Serial.print(F("Received color "));
-        Serial.println(color);
-        int animate = (strstr(color, "anime") != NULL)?1:0;
-        int success = (strstr(color, "blue") != NULL)?1:0;
+      Serial.print(F("Status received from client"));
+      Serial.println(status, BIN);
+      if(status != JOB_INVALID_STATUS){
+        int indexOfColorToUse = DISABLED;
+        if(status & JOB_SUCCEEDED) {
+          indexOfColorToUse = SUCCEEDED;
+        } else if(status & JOB_FAILED){
+          indexOfColorToUse = FAILED;
+        } else if(status & JOB_UNSTABLE) {
+          indexOfColorToUse = UNSTABLE;
+        } else if(status & JOB_CANCELED) {
+          indexOfColorToUse = CANCELED;
+        }
         
-        for(int i = 0 ; i < KNOWN_COLORS_SIZE ; i++){
-          if( (!success && strncmp(knownColors[i],color,3) == 0 )
-              || (success && strncmp(knownColors[i],SUCCESS_LIGHT_COLOR,3) == 0)){
-            sb.setColor(projectIndex, components[i][0], components[i][1], components[i][2], animate?&pulseAnimation:NULL);
-            Serial.print(F("Setting ShiftBrite to color "));
-            Serial.println(knownColors[i]);
-            found = 1;
-            break;
-          }
-        }
-        if(!found){
-          sb.setColor(projectIndex,0,0,0);
-        }
+        int animate = status & JOB_IN_PROGRESS;
+        sb.setColor(projectIndex, components[indexOfColorToUse][0], components[indexOfColorToUse][1], components[indexOfColorToUse][2], animate?&pulseAnimation:NULL);
+        Serial.print(F("Setting ShiftBrite to color "));
+        Serial.println(knownColors[indexOfColorToUse]);
+
       } else {
         Serial.println(F("Failure, turning off light"));
         sb.setColor(projectIndex,0,0,0);
