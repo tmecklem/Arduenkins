@@ -236,7 +236,7 @@ void loop()
 
       } else {
         Serial.println(F("Failure, turning off light"));
-        sb.setColor(projectIndex,0,0,0);
+        sb.setColor(projectIndex,components[FAILED][0],components[FAILED][1],components[FAILED][2],fastFlashAnimation);
       }
     }
     if(ENABLE_WATCHDOG){

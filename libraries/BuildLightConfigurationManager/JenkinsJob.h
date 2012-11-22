@@ -5,13 +5,13 @@
 #include "config.h"
 #include "utility.h"
 
-#define JOB_INVALID_STATUS 0x00
-#define JOB_DISABLED 0x01
-#define JOB_SUCCEEDED 0x02
-#define JOB_FAILED 0x04
-#define JOB_UNSTABLE 0x08
-#define JOB_CANCELED 0x10
-#define JOB_IN_PROGRESS 0x80
+#define JOB_IN_PROGRESS 0x01
+#define JOB_DISABLED 0x02
+#define JOB_CANCELED 0x04
+#define JOB_SUCCEEDED 0x08
+#define JOB_UNSTABLE 0x10
+#define JOB_FAILED 0x20
+#define JOB_INVALID_STATUS 0x40
 
 class JenkinsJob {
 public:

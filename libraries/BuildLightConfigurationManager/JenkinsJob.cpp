@@ -50,6 +50,9 @@ void JenkinsJob::printJob() {
   Serial.print(F(":"));
   Serial.print(m_port);
   for(int i = 0 ; i < MAX_LOCATIONS_PER_LINE ; i++){
+    if(m_jobLocations != NULL && i > 0){
+      Serial.print(F(","));
+    }
     Serial.print(m_jobLocations[i]);
   }
   Serial.println();

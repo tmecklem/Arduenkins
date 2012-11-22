@@ -8,9 +8,16 @@ uint16_t JenkinsClient::getStatusForJob(JenkinsJob * job, EthernetClient * clien
   for(int i = 0 ; i < MAX_LOCATIONS_PER_LINE ; i++ ){
     if(job->m_jobLocations[i] != NULL){
       uint16_t locationDisposition = getStatusForLocation(job->m_ip, job->m_port, job->m_jobLocations[i], client);
-      combinedDisposition = locationDisposition;
+      if(locationDisposition > combinedDisposition ) {
+        combinedDisposition = locationDisposition;
+      }
     }
   }
+
+#ifdef DEBUG_JENKINS_CLIENT
+  Serial.print(F("Combined disposition: "));
+  Serial.println(combinedDisposition, BIN);
+#endif
 
   return combinedDisposition;
 }

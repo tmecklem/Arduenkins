@@ -1,4 +1,5 @@
 #include "Animations.h"
+#include <math.h>
 
 #define pi 3.14 //IS EXACTLY 3!
 
@@ -14,4 +15,17 @@ void noAnimation(const uint16_t referenceColor[], uint16_t *currentStep, uint8_t
   colorsForCommand[1] =  referenceColor[1];
   colorsForCommand[2] =  referenceColor[2];
   *currentStep = 0;
+}
+
+void fastFlashAnimation(const uint16_t referenceColor[], uint16_t *currentStep, uint8_t lightUpdateFrequency, uint16_t colorsForCommand[], int *finished) {
+  if(round((float)*currentStep / ((float)lightUpdateFrequency/2)) == 0) {
+    colorsForCommand[0] =  127;
+    colorsForCommand[1] =  127;
+    colorsForCommand[2] =  127;
+  } else {
+    colorsForCommand[0] =  referenceColor[0];
+    colorsForCommand[1] =  referenceColor[1];
+    colorsForCommand[2] =  referenceColor[2];
+  }
+  *currentStep = (*currentStep) % (lightUpdateFrequency/2);
 }
