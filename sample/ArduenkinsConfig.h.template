@@ -12,6 +12,7 @@
 #define CONFIG_PORT 80
 #define CONFIG_LOCATION "/config.txt"
 
+#define UPDATE_CONFIGURATION_INTERVAL 300 //in seconds
 #define UPDATE_INTERVAL 15 //in seconds
 #define LIGHT_UPDATE_FREQUENCY 20 //in Hz
 #define ENABLE_WATCHDOG 0

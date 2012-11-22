@@ -188,7 +188,7 @@ void loop()
     Serial.println(F("Re-initializing from configuration site"));
     numberOfJobsConfigured = jenkinsClient.initializeConfiguration();
     if(numberOfJobsConfigured > 0){
-      cyclesBeforeReinitialization = (UPDATE_INTERVAL*LIGHT_UPDATE_FREQUENCY) - 1;
+      cyclesBeforeReinitialization = (UPDATE_INTERVAL*UPDATE_CONFIGURATION_INTERVAL) - 1;
     }
     if(ENABLE_WATCHDOG){
       //reset the watchdog timer in case the request took a while
