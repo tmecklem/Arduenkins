@@ -2,10 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define JENKINS_POST_JOB_URL "/api/json?tree=color"
-#define LINK_JOBS 2
-#define DEBUG_JENKINS_CLIENT //Uncomment to print debug statements over serial
-
 void JenkinsJob::initializeJob(){
   for(int i = 0 ; i < MAX_LOCATIONS_PER_LINE ; i++){
     m_jobLocations[i] = NULL;
@@ -48,19 +44,14 @@ void JenkinsJob::addJobLocation(const char *jobLocation) {
 }
 
 void JenkinsJob::printJob() {
-  printIp(m_ip);
+  char buffer[16] = {NULL};
+  printIp(m_ip, buffer);
+  Serial.print(buffer);
   Serial.print(F(":"));
   Serial.print(m_port);
   for(int i = 0 ; i < MAX_LOCATIONS_PER_LINE ; i++){
     Serial.print(m_jobLocations[i]);
   }
   Serial.println();
-}
-
-void JenkinsJob::printIp(uint8_t ip[]) {
-  for(int i = 0 ; i < 4 ; i++){
-    Serial.print(ip[i]);
-    if(i<3) { Serial.print(F(".")); }
-  }
 }
 

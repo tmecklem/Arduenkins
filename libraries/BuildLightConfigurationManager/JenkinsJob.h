@@ -2,9 +2,8 @@
 #define JenkinsJob_h
 
 #include "Arduino.h"
-
-#define MAX_CONFIG_LINE_LENGTH 100
-#define MAX_LOCATIONS_PER_LINE 4
+#include "config.h"
+#include "utility.h"
 
 #define JOB_INVALID_STATUS 0x00
 #define JOB_DISABLED 0x01
@@ -21,7 +20,6 @@ public:
   void setServer(uint8_t ip[4], uint16_t port);
   void addJobLocation(const char *jobLocation);
   void printJob();
-  void printIp(uint8_t ip[]);
   const uint8_t getIp();
   const uint16_t getPort();
   const char *getJobLocation(int index);

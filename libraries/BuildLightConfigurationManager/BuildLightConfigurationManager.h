@@ -4,6 +4,8 @@
 #include "Arduino.h"
 #include "JenkinsJob.h"
 #include "JenkinsClient.h"
+#include "config.h"
+#include "utility.h"
 
 #define MAX_SUPPORTED_JOBS 5
 
@@ -19,7 +21,6 @@ private:
   int parseConfig(char *config); //parses a config line
   int parseJob(char *config, JenkinsJob *job); //parses a job and populates a JenkinsJob
   void resetJobs();
-  void printIp(uint8_t ip[]);
 
   JenkinsClient *m_jenkinsClient;
   EthernetClient *_client;

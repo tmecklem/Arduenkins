@@ -2,31 +2,42 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define JENKINS_POST_JOB_URL "/api/json?tree=color"
-#define LINK_JOBS 2
-#define DEBUG_JENKINS_CLIENT //Uncomment to print debug statements over serial
-
 uint16_t JenkinsClient::getStatusForJob(JenkinsJob * job, EthernetClient * client) {
+  uint16_t combinedDisposition = 0;
+  
+  for(int i = 0 ; i < MAX_LOCATIONS_PER_LINE ; i++ ){
+    if(job->m_jobLocations[i] != NULL){
+      uint16_t locationDisposition = getStatusForLocation(job->m_ip, job->m_port, job->m_jobLocations[i], client);
+      combinedDisposition = locationDisposition;
+    }
+  }
+
+  return combinedDisposition;
+}
+
+uint16_t JenkinsClient::getStatusForLocation(uint8_t ip[], uint16_t port, char *location, EthernetClient *client){
   uint16_t disposition = 0;
 
 #ifdef DEBUG_JENKINS_CLIENT  
   Serial.print(F("Making request to  IP:"));
-  printIp(job->m_ip);
+  char buffer[16] = {NULL};
+  printIp(ip, buffer);
+  Serial.print(buffer);
   Serial.println();
 #endif
 
   // if you get a connection, report back via serial:
-  if (client->connect(job->m_ip, job->m_port)) {
+  if (client->connect(ip, port)) {
 #ifdef DEBUG_JENKINS_CLIENT  
     Serial.print(F("connected\n"));
     // Make a HTTP request:
     Serial.print(F("GET "));
-    Serial.print(job->m_jobLocations[0]);
+    Serial.print(location);
     Serial.println(JENKINS_POST_JOB_URL);
 #endif
 
     client->print("GET ");
-    client->print(job->m_jobLocations[0]);
+    client->print(location);
     client->println(JENKINS_POST_JOB_URL);
   } 
   else {
@@ -80,12 +91,5 @@ uint16_t JenkinsClient::getStatusForJob(JenkinsJob * job, EthernetClient * clien
 #endif
 
   return disposition;
-}
-
-void JenkinsClient::printIp(uint8_t ip[]) {
-  for(int i = 0 ; i < 4 ; i++){
-    Serial.print(ip[i]);
-    if(i<3) { Serial.print(F(".")); }
-  }
 }
 

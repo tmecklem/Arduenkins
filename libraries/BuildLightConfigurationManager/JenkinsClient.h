@@ -4,6 +4,8 @@
 #include "Arduino.h"
 #include "Ethernet.h"
 #include "JenkinsJob.h"
+#include "config.h"
+#include "utility.h"
 
 #define MAX_CONFIG_LINE_LENGTH 100
 #define MAX_SUPPORTED_JOBS 5
@@ -23,7 +25,7 @@ public:
   uint16_t getStatusForJob(JenkinsJob * job, EthernetClient * client);
   
 private:
-  void printIp(uint8_t ip[]);
+  uint16_t getStatusForLocation(uint8_t ip[], uint16_t port, char *location, EthernetClient *client);
 };
 
 #endif

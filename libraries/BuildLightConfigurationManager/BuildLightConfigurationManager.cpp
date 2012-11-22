@@ -2,10 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define JENKINS_POST_JOB_URL "/api/json?tree=color"
-#define LINK_JOBS 2
-#define DEBUG_JENKINS_CLIENT //Uncomment to print debug statements over serial
-
 BuildLightConfigurationManager::BuildLightConfigurationManager() {
   uint8_t server[] = {192,168,0,1};
 }
@@ -19,7 +15,9 @@ BuildLightConfigurationManager::BuildLightConfigurationManager(uint8_t configIp[
   _port = configPort;
   
   Serial.print(F("Config IP saved as "));
-  printIp(_ip);
+  char buffer[16] = {NULL};
+  printIp(_ip, buffer);
+  Serial.print(buffer);
   Serial.println();
   
   _client = client;
@@ -109,7 +107,9 @@ int BuildLightConfigurationManager::initializeConfiguration(){
 
 #ifdef DEBUG_JENKINS_CLIENT  
   Serial.print(F("Requesting configuration from http://"));
-  printIp(_ip);
+  char buffer[16] = {NULL};
+  printIp(_ip, buffer);
+  Serial.print(buffer);
   Serial.print(F(":"));
   Serial.print(_port);
   Serial.println(_configurationLocation);
@@ -195,12 +195,5 @@ int BuildLightConfigurationManager::initializeConfiguration(){
   Serial.print(F("Jobs Configured: "));
   Serial.println(_numConfiguredJobs);
   return _numConfiguredJobs;
-}
-
-void BuildLightConfigurationManager::printIp(uint8_t ip[]) {
-  for(int i = 0 ; i < 4 ; i++){
-    Serial.print(ip[i]);
-    if(i<3) { Serial.print(F(".")); }
-  }
 }
 
