@@ -88,6 +88,7 @@ uint16_t JenkinsClient::getStatusForLocation(uint8_t ip[], uint16_t port, char *
   disposition |= (strstr(status, "red") != NULL) ? JOB_FAILED : 0;
   disposition |= (strstr(status, "yellow") != NULL) ? JOB_UNSTABLE : 0;
   disposition |= (strstr(status, "grey") != NULL) ? JOB_CANCELED : 0;
+  disposition |= (strstr(status, "aborted") != NULL) ? JOB_CANCELED : 0;
   disposition |= (strstr(status, "anime") != NULL) ? JOB_IN_PROGRESS : 0;
   
 #ifdef DEBUG_JENKINS_CLIENT  
