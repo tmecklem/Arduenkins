@@ -60,6 +60,14 @@ uint16_t JenkinsClient::getStatusForLocation(uint8_t ip[], uint16_t port, char *
     //wait
   }
   
+  //now read until we encounter the first {
+  char tmp = ' ';
+  while(client->connected() && tmp != '{') {
+  	if(client->available()){
+  	  tmp = client->read();
+  	}
+  }
+  
   char status[31] = {'\0'};
   int pos = 0;
   
@@ -77,7 +85,7 @@ uint16_t JenkinsClient::getStatusForLocation(uint8_t ip[], uint16_t port, char *
 #endif
   client->stop();
   
-  char prefix[] = "{\"color\":\"";
+  char prefix[] = "\"color\":\"";
   
   if(!strncmp(status, prefix, strlen(prefix))==0){
     return JOB_INVALID_STATUS;
