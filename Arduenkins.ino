@@ -207,7 +207,7 @@ void loop()
       int failure = 0;
       uint16_t status = 0;
       
-      while( (status = jenkinsClient.getStatusForProject(projectIndex)) == JOB_INVALID_STATUS && retry < 5){
+      while( (status = jenkinsClient.getStatusForProject(projectIndex)) == JOB_INVALID_STATUS && retry < 2){
         doWorkaround(failure, &failureCount);
         retry++;
         if(ENABLE_WATCHDOG){
