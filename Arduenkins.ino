@@ -210,6 +210,10 @@ void loop()
       while( (status = jenkinsClient.getStatusForProject(projectIndex)) == JOB_INVALID_STATUS && retry < 5){
         doWorkaround(failure, &failureCount);
         retry++;
+        if(ENABLE_WATCHDOG){
+          //reset the watchdog timer in case the request took a while
+          wdt_reset();
+        }
       }
       if(retry < 5) {
         //we succeeded without hitting the max count, so allow the failureCount to reset
@@ -238,10 +242,6 @@ void loop()
         Serial.println(F("Failure, turning off light"));
         sb.setColor(projectIndex,components[FAILED][0],components[FAILED][1],components[FAILED][2],fastFlashAnimation);
       }
-    }
-    if(ENABLE_WATCHDOG){
-      //reset the watchdog timer in case the request took a while
-      wdt_reset();
     }
   }
   
